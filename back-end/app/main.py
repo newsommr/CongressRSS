@@ -9,7 +9,7 @@ from sqlalchemy import Column, Integer, String, DateTime, exists
 app = FastAPI()
 
 origins = [
-    "https:congress.cipherkeeper.dev",
+    "https://congress.cipherkeeper.dev",
 ]
 
 app.add_middleware(
