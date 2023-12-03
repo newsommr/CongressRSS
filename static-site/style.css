@@ -1,0 +1,52 @@
+h1 a {
+    color: #333;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 30px;
+}
+
+h1 a:hover {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.nav {
+    justify-content: center;
+    margin-top: 1%;
+}
+
+footer {
+    margin-left: 2%;
+    margin-bottom: 0.5%;
+    position: static;
+    bottom: 0;
+    left: 0;
+    font-size: 12px;
+    color: grey;
+    visibility: hidden;
+}
+
+#no-scroll {
+    margin-left: 2%;
+    margin-bottom: 0.5%;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    font-size: 12px;
+    color: grey;
+}
+
+ul {
+    list-style: none;
+    max-width: 60%;
+    margin: 0 auto;
+}
+
+h1 {
+    text-align: center;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.container {
+    font-family: 'Montserrat', sans-serif;
+}

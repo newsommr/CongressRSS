@@ -1,0 +1,6 @@
+fastapi ~= 0.103
+uvicorn[standard]
+feedparser
+sqlalchemy
+python-multipart
+alembic
