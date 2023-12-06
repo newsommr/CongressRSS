@@ -30,7 +30,5 @@ def read_items_by_source(source: str, limit: int = 100, db: Session = Depends(ge
         if not items:
             raise HTTPException(status_code=404, detail="Items not found.")
         return items
-    except HTTPException:
-        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail="Internal server error")
