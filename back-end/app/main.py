@@ -1,15 +1,16 @@
-import hashlib
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.models import Rules, SignedLegislation, Base, engine, SessionLocal
-from app.rss_fetcher import fetch_rss_data
-from sqlalchemy import Column, Integer, String, DateTime, exists
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from rss_fetcher import fetch_rss_data
+from database import create_rss_item, get_db, Base, engine
+from api import router as api_router
 
-
+# Initialize FastAPI app
 app = FastAPI()
 
 origins = [
     "https://congress.cipherkeeper.dev",
+    "*",
 ]
 
 app.add_middleware(
@@ -20,51 +21,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Create the database tables
-Rules.metadata.create_all(engine)
-SignedLegislation.metadata.create_all(engine)
+# Initialize scheduler
+scheduler = AsyncIOScheduler()
 
-@app.on_event("startup")
-async def startup_event():
-    session = SessionLocal()
-    try:
-        rules_data = fetch_rss_data('https://rules.house.gov/rss.xml')
-        legislation_data = fetch_rss_data('https://www.whitehouse.gov/briefing-room/legislation/feed/')
+# Define task for fetching RSS data
+def fetch_and_store_rss():
+    print("running")
+    db = next(get_db())
+    for url, source in [("https://rules.house.gov/rss.xml", "House Rules Committee"), 
+                        ("https://www.whitehouse.gov/briefing-room/legislation/feed/", "White House Legislation")]:
+        items = fetch_rss_data(url, source)  # Include the source here
+        for item in items:
+            create_rss_item(db, item)
 
-        # Sort data by 'pubDate' (assuming it's in a suitable format for sorting)
-        sorted_rules_data = sorted(rules_data, key=lambda x: x['pubDate'])
-        sorted_legislation_data = sorted(legislation_data, key=lambda x: x['pubDate'])
 
-        for item_data in sorted_rules_data:
-            item_hash = hashlib.md5(f"{item_data['title']}{item_data['link']}{item_data['pubDate']}".encode()).hexdigest()
-            if not session.query(exists().where(Rules.hash == item_hash)).scalar():
-                item = Rules(**item_data, hash=item_hash)
-                session.add(item)
+# Schedule the task
+scheduler.add_job(fetch_and_store_rss, "interval", minutes=5)
+scheduler.start()
 
-        for item_data in sorted_legislation_data:
-            item_hash = hashlib.md5(f"{item_data['title']}{item_data['link']}{item_data['pubDate']}".encode()).hexdigest()
-            if not session.query(exists().where(SignedLegislation.hash == item_hash)).scalar():
-                item = SignedLegislation(**item_data, hash=item_hash)
-                session.add(item)
+# Create database tables
+Base.metadata.create_all(bind=engine)
 
-        session.commit()
-    finally:
-        session.close()
-
-@app.get("/rules")
-async def get_rules():
-    session = SessionLocal()
-    try:
-        items = session.query(Rules).all()
-        return items
-    finally:
-        session.close()
-
-@app.get("/signed_legislation")
-async def get_signed_legislation():
-    session = SessionLocal()
-    try:
-        items = session.query(SignedLegislation).all()
-        return items
-    finally:
-        session.close()
+# Include API router
+app.include_router(api_router)
