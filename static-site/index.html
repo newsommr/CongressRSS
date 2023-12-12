@@ -20,10 +20,10 @@
   <div class="container mt-4">
       <div class="row">
           <div class="col-12">
-              <div class="sort-options text-center mb-3">
-                  <button class="btn btn-primary" onclick="changeSortOrder('asc')">Sort Ascending</button>
-                  <button class="btn btn-secondary" onclick="changeSortOrder('desc')">Sort Descending</button>
-              </div>
+            <div class="sort-options text-center mb-3">
+              <button class="btn btn-primary" id="toggleSortButton" onclick="toggleSortOrder()">Sort Items</button>
+          </div>
+          
               <div class="filter-options text-center mb-3">
                 <input type="checkbox" id="whiteHouseLegislation" name="source" value="White House Legislation">
                 <label for="whiteHouseLegislation">White House Legislation</label>
@@ -31,7 +31,6 @@
                 <input type="checkbox" id="houseRulesCommittee" name="source" value="House Rules Committee">
                 <label for="houseRulesCommittee">House Rules Committee</label>
 
-                <button class="btn btn-info" onclick="applyFilters()">Apply Filters</button>
                 </div>
               <div id="rss-content">
                   <!-- fetchRSS.js will load the items here. -->
