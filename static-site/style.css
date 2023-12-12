@@ -1,88 +1,47 @@
-.container .sort-options {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: -5;
-}
-
-.container .sort-options button {
-    background-color: #FFC0CB; /* Light pink color to match the theme */
-    border: none;
-    border-radius: 5px;
-    padding: 10px 15px;
-    margin: 0 10px;
-    cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: background-color 0.3s;
-}
-
-.container .sort-options button:hover {
-    background-color: #FFB6C1; /* Slightly darker pink on hover */
-}
-
-
-nav {
-    width: 100%;
-    height: 50px;
-    position: absolute; /* or 'relative' depending on your layout needs */
-    display: flex;
-    top: 0;
-    padding-top: .5%;
-    align-items: center;
-}
-
-
-nav ul {
-    display: flex;
-    margin: 10%; /* Add this line */
-}
-
-nav li {
-    margin: 0 20px;
-}
-
-nav a {
-    text-decoration: none;
-    color: black;
-}
-
 body {
-    font-family: 'Arial', sans-serif;
-    background-color: #FADADD; /* Pale pink background */
-    margin: 0;
-    padding: 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-.container {
-    position: relative;
-    text-align: center;
-    width: 90%;
-    max-width: 40%;
-    margin-top: 2%;
-}
-    margin-top: 2%;
-}
-ul {
-    list-style: none;
-    padding: 0;
-    margin-top: 10%;
-}
-li {
-    background: #FFF;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    padding: 10px;
-    display: flex;
-    align-items: center;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-li:last-child {
-    margin-bottom: 0;
+    background-color: #f4f4f4; /* Light grey background for the entire page */
+    font-family: Arial, sans-serif; /* Consistent font */
 }
 
-.item-text {
-    flex-grow: 1;
-    text-align: left;
-    text-overflow: ellipsis;
+#navbar {
+    margin-bottom: 20px; /* Space between the navbar and content */
+}
+
+.sort-options {
+    margin-bottom: 15px; /* Space below the sorting buttons */
+}
+
+.sort-options button {
+    margin: 0 5px; /* Spacing between buttons */
+}
+
+#rss-content ul {
+    list-style: none; /* Remove default list styling */
+    padding: 0;
+}
+
+#rss-content li {
+    background-color: #ffffff; /* White background for each list item */
+    border: 1px solid #ddd; /* Light grey border */
+    padding: 15px;
+    margin-bottom: 10px; /* Space between list items */
+}
+
+#rss-content li .item-text {
+    color: #333; /* Dark text for readability */
+}
+
+#rss-content li .item-text a {
+    color: #007bff; /* Bootstrap primary color for links */
+    text-decoration: none;
+}
+
+#rss-content li .item-text a:hover {
+    text-decoration: underline; /* Underline on hover for links */
+}
+
+#rss-content li .item-text p {
+    margin-top: 5px;
+    font-size: 0.9em;
+    color: #666; /* Lighter text for the publish date */
 }
