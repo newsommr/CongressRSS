@@ -1,52 +1,88 @@
-h1 a {
-    color: #333;
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 30px;
+.container .sort-options {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -5;
 }
 
-h1 a:hover {
-    color: #007bff;
-    text-decoration: none;
+.container .sort-options button {
+    background-color: #FFC0CB; /* Light pink color to match the theme */
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    margin: 0 10px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s;
 }
 
-.nav {
+.container .sort-options button:hover {
+    background-color: #FFB6C1; /* Slightly darker pink on hover */
+}
+
+
+nav {
+    width: 100%;
+    height: 50px;
+    position: absolute; /* or 'relative' depending on your layout needs */
+    display: flex;
+    top: 0;
+    padding-top: .5%;
+    align-items: center;
+}
+
+
+nav ul {
+    display: flex;
+    margin: 10%; /* Add this line */
+}
+
+nav li {
+    margin: 0 20px;
+}
+
+nav a {
+    text-decoration: none;
+    color: black;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #FADADD; /* Pale pink background */
+    margin: 0;
+    padding: 20px;
+    display: flex;
     justify-content: center;
-    margin-top: 1%;
+    align-items: center;
+.container {
+    position: relative;
+    text-align: center;
+    width: 90%;
+    max-width: 40%;
+    margin-top: 2%;
 }
-
-footer {
-    margin-left: 2%;
-    margin-bottom: 0.5%;
-    position: static;
-    bottom: 0;
-    left: 0;
-    font-size: 12px;
-    color: grey;
-    visibility: hidden;
+    margin-top: 2%;
 }
-
-#no-scroll {
-    margin-left: 2%;
-    margin-bottom: 0.5%;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    font-size: 12px;
-    color: grey;
-}
-
 ul {
     list-style: none;
-    max-width: 60%;
-    margin: 0 auto;
+    padding: 0;
+    margin-top: 10%;
+}
+li {
+    background: #FFF;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+li:last-child {
+    margin-bottom: 0;
 }
 
-h1 {
-    text-align: center;
-    font-family: 'Montserrat', sans-serif;
-}
-
-.container {
-    font-family: 'Montserrat', sans-serif;
+.item-text {
+    flex-grow: 1;
+    text-align: left;
+    text-overflow: ellipsis;
 }
