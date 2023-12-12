@@ -3,8 +3,9 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import IntegrityError
 import datetime
+import os
 
-DATABASE_URL = "sqlite:///./congressrss.db"  # SQLite database URL
+DATABASE_URL = os.environ['DB_FILENAME']  # SQLite database URL
 
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

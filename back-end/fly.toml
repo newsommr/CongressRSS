@@ -3,8 +3,8 @@
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = "back-end"
-primary_region = "atl"
+app = "congress-rss"
+primary_region = "iad"
 
 [build]
 
@@ -16,6 +16,10 @@ primary_region = "atl"
   min_machines_running = 0
   processes = ["app"]
 
+[env]
+  DB_CLIENT = "sqlite3"
+  DB_FILENAME = "sqlite:///../data/congressrss.db"
+
 [[vm]]
   cpu_kind = "shared"
   cpus = 1
@@ -23,4 +27,4 @@ primary_region = "atl"
 
 [mounts]
   source = "data"
-  destination="/data"
+  destination="/data/"
