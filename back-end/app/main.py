@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from rss_fetcher import fetch_rss_data
-from database import create_rss_item, get_db, Base, engine
-from api import router as api_router
+from app.rss_fetcher import fetch_rss_data
+from app.database import create_rss_item, get_db, Base, engine
+from app.api import router as api_router
 
 # Initialize FastAPI app
 app = FastAPI()

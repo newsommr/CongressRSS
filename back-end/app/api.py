@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
-from database import get_db, RSSItem
+from app.database import get_db, RSSItem
 import logging
 
 router = APIRouter()
