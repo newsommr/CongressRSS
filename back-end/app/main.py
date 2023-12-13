@@ -28,8 +28,10 @@ scheduler = AsyncIOScheduler()
 def fetch_and_store_rss():
     print("running")
     db = next(get_db())
-    for url, source in [("https://rules.house.gov/rss.xml", "House Rules Committee"), 
-                        ("https://www.whitehouse.gov/briefing-room/legislation/feed/", "White House Legislation")]:
+    for url, source in [("https://rules.house.gov/rss.xml", "house-rules-committee"), 
+                        ("https://www.whitehouse.gov/briefing-room/legislation/feed/", "white-house-legislation"),
+                        ("https://www.whitehouse.gov/briefing-room/presidential-actions/feed/rss", "white-house-presidential-actions"),
+                        ("https://nitter.x86-64-unknown-linux-gnu.zip/SenatePPG/rss", "senateppg-twitter")]:
         items = fetch_rss_data(url, source)  # Include the source here
         for item in items:
             create_rss_item(db, item)

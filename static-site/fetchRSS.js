@@ -1,5 +1,11 @@
 var items = []; // Global variable to store all fetched items
 var currentSortOrder = 'desc'; // Default sorting order
+var sourceNameMapping = {
+    'white-house-legislation': 'White House',
+    'white-house-presidential-actions': 'White House',
+    'house-rules-committee': 'House Rules Committee',
+    'senateppg-twitter': 'Senate Periodical Press Gallery'
+};
 
 // Function to fetch RSS data once and store it
 function fetchRSS(url) {
@@ -56,7 +62,8 @@ for (var i = 0; i < itemsToDisplay.length; i++) {
     html += "<div class='item-text'>";
     html += "<a href='" + itemsToDisplay[i].link + "'>" + title + "</a>";
     html += "<p> Published: " + localTimeString + "<br>"; // Adjusted line
-    html += "Source: " + itemsToDisplay[i].source.trim() + "</p>";
+    var sourceDisplayName = sourceNameMapping[itemsToDisplay[i].source.trim()] || itemsToDisplay[i].source.trim();
+    html += "Source: " + sourceDisplayName + "</p>";
     html += "</div>";
     html += "</li>";
 }
@@ -92,7 +99,7 @@ function applyFilters() {
 
 // Initial fetch with default sort order
 $(document).ready(function() {
-    fetchRSS("https://congress-rss.fly.dev/items/");
+    fetchRSS("https://congress-rss.fly.dev/items/?limit=500");
 
     // Uncheck all checkboxes on page refresh
     $("input[name='source']").prop('checked', true);
