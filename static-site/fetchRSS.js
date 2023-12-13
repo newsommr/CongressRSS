@@ -56,7 +56,7 @@ for (var i = 0; i < itemsToDisplay.length; i++) {
     html += "<div class='item-text'>";
     html += "<a href='" + itemsToDisplay[i].link + "'>" + title + "</a>";
     html += "<p> Published: " + localTimeString + "<br>"; // Adjusted line
-    html += "Source: " + itemsToDisplay[i].source + "</p>";
+    html += "Source: " + itemsToDisplay[i].source.trim() + "</p>";
     html += "</div>";
     html += "</li>";
 }

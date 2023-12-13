@@ -24,7 +24,8 @@ body {
     background-color: #ffffff; /* White background for each list item */
     border: 1px solid #ddd; /* Light grey border */
     padding: 15px;
-    margin-bottom: 10px; /* Space between list items */
+    margin-bottom: 1%; /* Space between list items */
+    padding-bottom: 0; /* Remove bottom padding */
 }
 
 #rss-content li .item-text {
