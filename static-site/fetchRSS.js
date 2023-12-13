@@ -5,6 +5,7 @@ var sourceNameMapping = {
     'white-house-presidential-actions': 'White House',
     'house-rules-committee': 'House Rules Committee',
     'senateppg-twitter': 'Senate Periodical Press Gallery'
+    'housedailypress-twitter': 'House Press Gallery'
 };
 
 // Function to fetch RSS data once and store it
