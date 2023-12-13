@@ -92,7 +92,7 @@ function applyFilters() {
 
 // Initial fetch with default sort order
 $(document).ready(function() {
-    fetchRSS("https://congress-rss.fly.dev/items");
+    fetchRSS("https://congress-rss.fly.dev/items/");
 
     // Uncheck all checkboxes on page refresh
     $("input[name='source']").prop('checked', true);
