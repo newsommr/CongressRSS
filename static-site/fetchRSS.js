@@ -28,30 +28,42 @@ function displayItems(sortOrder = currentSortOrder, filterSources = []) {
         return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
     });
 
-    // Generate and display HTML for the itemsToDisplay
-    var html = "<ul class='list-group'>";
-    for (var i = 0; i < itemsToDisplay.length; i++) {
-        var pubDate = new Date(itemsToDisplay[i].pubDate);
-        var timeZoneAbbreviation = pubDate.toLocaleTimeString("en-US", {
-            timeZoneName: "short",
-        }).split(" ")[2];
+// Generate and display HTML for the itemsToDisplay
+var html = "<ul class='list-group'>";
+for (var i = 0; i < itemsToDisplay.length; i++) {
+    var pubDate = new Date(itemsToDisplay[i].pubDate);
+    const localOffset = pubDate.getTimezoneOffset();
+    const localTime = new Date(pubDate.getTime() - localOffset * 60000);
+    
+    // Modified line: Format the date and time
+    const localTimeString = localTime.toLocaleString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,
+        timeZoneName: 'short'
+    });
 
-        var title = itemsToDisplay[i].title;
-        if (title.length > 250) {
-            title = title.substring(0, 252) + "...";
-        }
-
-        html += "<li class='list-group-item'>";
-        html += "<div class='item-text'>";
-        html += "<a href='" + itemsToDisplay[i].link + "'>" + title + "</a>";
-        html += "<p> Published: " + pubDate.toLocaleDateString() + " " + pubDate.toLocaleTimeString() + " (" + timeZoneAbbreviation + ")<br>";
-        html += "Source: " + itemsToDisplay[i].source + "</p>";
-        html += "</div>";
-        html += "</li>";
+    var title = itemsToDisplay[i].title;
+    if (title.length > 250) {
+        title = title.substring(0, 252) + "...";
     }
-    html += "</ul>";
 
-    $("#rss-content").html(html);
+    html += "<li class='list-group-item'>";
+    html += "<div class='item-text'>";
+    html += "<a href='" + itemsToDisplay[i].link + "'>" + title + "</a>";
+    html += "<p> Published: " + localTimeString + "<br>"; // Adjusted line
+    html += "Source: " + itemsToDisplay[i].source + "</p>";
+    html += "</div>";
+    html += "</li>";
+}
+html += "</ul>";
+
+$("#rss-content").html(html);
+
 }
 
 // Function to toggle sort order

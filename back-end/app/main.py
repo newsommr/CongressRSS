@@ -46,4 +46,4 @@ Base.metadata.create_all(bind=engine)
 app.include_router(api_router)
 
 # Check for new data
-#fetch_and_store_rss();
+fetch_and_store_rss();
