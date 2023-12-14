@@ -4,7 +4,7 @@ var sourceNameMapping = {
     'white-house-legislation': 'White House',
     'white-house-presidential-actions': 'White House',
     'house-rules-committee': 'House Rules Committee',
-    'senateppg-twitter': 'Senate Periodical Press Gallery'
+    'senateppg-twitter': 'Senate Periodical Press Gallery',
     'housedailypress-twitter': 'House Press Gallery'
 };
 
