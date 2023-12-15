@@ -52,6 +52,15 @@ The back-end exposes the following API endpoints:
 - `GET /items/`: Fetches all items. You can limit the number of items by passing a `limit` query parameter.
 - `GET /items/{source}`: Fetches items from a specific source. You can limit the number of items by passing a `limit` query parameter.
 
+The valid sources that can be fetched are:
+- `'white-house-legislation'`: Fetches signed legislation from the White House.
+- `'white-house-presidential-actions'`: Fetches presidential actions from the White House.
+- `'house-rules-committee'`: Fetches data from the House Rules Committee.
+- `'senateppg-twitter'`: Fetches data from the Senate Periodical Press Gallery.
+- `'housedailypress-twitter'`: Fetches data from the House Daily Press Gallery.
+
+For example, to fetch items from the House Rules Committee, you would use the endpoint `GET /items/house-rules-committee`.
+
 ## Contributing
 
 All contributions are welcome, especially if you have found a useful feed to pull from! Please feel free to submit a pull request.
