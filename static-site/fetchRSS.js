@@ -1,110 +1,144 @@
-var items = []; // Global variable to store all fetched items
-var currentSortOrder = 'desc'; // Default sorting order
-var sourceNameMapping = {
-    'white-house-legislation': 'White House',
-    'white-house-presidential-actions': 'White House',
-    'house-rules-committee': 'House Rules Committee',
-    'senateppg-twitter': 'Senate Periodical Press Gallery',
-    'housedailypress-twitter': 'House Press Gallery'
-};
+(function() {
+    const API_URL = "https://congress-rss.fly.dev/items/";
+    const TITLE_MAX_LENGTH = 250;
 
-// Function to fetch RSS data once and store it
-function fetchRSS(url) {
-    $.ajax({
-        url: url,
-        method: "GET",
-        success: function (data) {
-            items = data; // Store the fetched data
-            displayItems(); // Display items initially
-        },
-    });
-}
+    // State Variables
+    let items = [];
+    let currentSortOrder = 'desc';
+    let lastSearchTerm = '';
 
-// Function to display items with current filters and sorting
-function displayItems(sortOrder = currentSortOrder, filterSources = []) {
-    var itemsToDisplay = items;
+    const sourceNameMapping = {
+        'white-house-legislation': 'White House',
+        'white-house-presidential-actions': 'White House',
+        'house-rules-committee': 'House Rules Committee',
+        'senateppg-twitter': 'Senate Periodical Press Gallery',
+        'housedailypress-twitter': 'House Press Gallery'
+    };
 
-    // Filter itemsToDisplay by source if filterSources is not empty
-    if (filterSources.length > 0) {
-        itemsToDisplay = itemsToDisplay.filter(item => filterSources.includes(item.source));
+    // Fetch from API with/without filtering
+    async function fetchRSS(url, applySourceFilter = false) {
+        try {
+            const response = await fetch(url);
+            items = await response.json();
+            applySourceFilter ? applyFilters() : displayItems();
+        } catch (error) {
+            console.error("Failed to fetch RSS:", error);
+            document.getElementById('rss-content').innerHTML = 'Error fetching data.';
+        }
     }
 
-    // Sort the itemsToDisplay based on pubDate and sortOrder
-    itemsToDisplay.sort((a, b) => {
-        var dateA = new Date(a.pubDate), dateB = new Date(b.pubDate);
-        return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
-    });
-
-// Generate and display HTML for the itemsToDisplay
-var html = "<ul class='list-group'>";
-for (var i = 0; i < itemsToDisplay.length; i++) {
-    var pubDate = new Date(itemsToDisplay[i].pubDate);
-    const localOffset = pubDate.getTimezoneOffset();
-    const localTime = new Date(pubDate.getTime() - localOffset * 60000);
-    
-    // Modified line: Format the date and time
-    const localTimeString = localTime.toLocaleString('en-US', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: true,
-        timeZoneName: 'short'
-    });
-
-    var title = itemsToDisplay[i].title;
-    if (title.length > 250) {
-        title = title.substring(0, 252) + "...";
+    // Display items with optional sorting and filtering
+    function displayItems(sortOrder = currentSortOrder, filterSources = [], searchTerm = '') {
+        let filteredItems = filterAndSortItems(items, filterSources, searchTerm, sortOrder);
+        renderItems(filteredItems);
     }
 
-    html += "<li class='list-group-item'>";
-    html += "<div class='item-text'>";
-    html += "<a href='" + itemsToDisplay[i].link + "'>" + title + "</a>";
-    html += "<p> Published: " + localTimeString + "<br>"; // Adjusted line
-    var sourceDisplayName = sourceNameMapping[itemsToDisplay[i].source.trim()] || itemsToDisplay[i].source.trim();
-    html += "Source: " + sourceDisplayName + "</p>";
-    html += "</div>";
-    html += "</li>";
-}
-html += "</ul>";
+    // Filter and sort items
+    function filterAndSortItems(items, filterSources, searchTerm, sortOrder) {
+        return items
+            .filter(item => filterSources.length === 0 || filterSources.includes(item.source))
+            .filter(item => searchTerm.trim() === '' || item.title.toLowerCase().includes(searchTerm.toLowerCase()))
+            .sort((a, b) => (sortOrder === 'asc' ? new Date(a.pubDate) - new Date(b.pubDate) : new Date(b.pubDate) - new Date(a.pubDate)));
+    }
 
-$("#rss-content").html(html);
+    // Render items to the DOM
+    function renderItems(items) {
+        const listGroup = document.createElement('ul');
+        listGroup.className = 'list-group';
 
-}
+        items.forEach(item => {
+            const listItem = document.createElement('li');
+            listItem.className = 'list-group-item';
+            listItem.innerHTML = getItemHTML(item);
+            listGroup.appendChild(listItem);
+        });
 
-// Function to toggle sort order
-function toggleSortOrder() {
-    currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
-    applyFilters();
-}
+        const contentContainer = document.getElementById('rss-content');
+        contentContainer.innerHTML = '';
+        contentContainer.appendChild(listGroup);
+    }
 
-// Function to apply filters based on selected checkboxes
-function applyFilters() {
-  var selectedSources = [];
-  $("input[name='source']:checked").each(function() {
-      selectedSources.push($(this).val());
-  });
+    // Generate the HTML for each item to be displayed.
+    function getItemHTML(item) {
+        const title = item.title.length > TITLE_MAX_LENGTH ? `${item.title.substring(0, TITLE_MAX_LENGTH)}...` : item.title;
+        const localTimeString = getFormattedLocalTime(item.pubDate);
+        const sourceName = sourceNameMapping[item.source.trim()] || item.source.trim();
 
-  // Check if no checkboxes are selected
-  if (selectedSources.length === 0) {
-      // Clear the displayed items
-      $("#rss-content").html("");
-      return; // Exit the function
-  }
+        return `
+            <div class='item-text'>
+                <a href='${item.link}'>${title}</a>
+                <p> Published: ${localTimeString}<br>
+                Source: ${sourceName}</p>
+            </div>
+        `;
+    }
 
-  // Call displayItems with the selected sources
-  displayItems(currentSortOrder, selectedSources);
-}
+    // Formats the pubdate to display to the user's local time
+    function getFormattedLocalTime(pubDate) {
+        const localTime = new Date(pubDate);
+        return localTime.toLocaleString('en-US', {
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit',
+            hour12: true, timeZoneName: 'short'
+        });
+    }
 
-// Initial fetch with default sort order
-$(document).ready(function() {
-    fetchRSS("https://congress-rss.fly.dev/items/?limit=500");
+    function toggleSortOrder() {
+        currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+        applyFilters();
+    }
 
-    // Uncheck all checkboxes on page refresh
-    $("input[name='source']").prop('checked', true);
+    function applyFilters() {
+        const selectedSources = getSelectedSources();
+        if (selectedSources.length === 0) {
+            document.getElementById('rss-content').innerHTML = 'No sources selected.';
+            return;
+        }
+        displayItems(currentSortOrder, selectedSources, lastSearchTerm);
+    }
 
-    // Attach a change event listener to checkboxes
-    $("input[name='source']").change(applyFilters);
-});
+    function getSelectedSources() {
+        return Array.from(document.querySelectorAll("input[name='source']:checked"))
+            .map(input => input.value);
+    }
+
+    function fetchFilteredResults() {
+        const selectedSources = getSelectedSources();
+        let url = `${API_URL}search/${encodeURIComponent(lastSearchTerm)}`;
+
+        if (selectedSources.length === 0) return;
+
+        url += selectedSources.length > 0 ? `?sources=${encodeURIComponent(selectedSources.join(','))}` : '';
+        fetchRSS(url, true);
+    }
+
+    function handleSearchInput() {
+        const searchTerm = document.getElementById('searchInput').value;
+                lastSearchTerm = searchTerm;
+
+        if (lastSearchTerm !== "") {
+            fetchFilteredResults();
+        } else {
+            fetchRSS(`${API_URL}?limit=500`, true);
+        }
+    }
+
+    // Initialization
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchRSS(`${API_URL}?limit=500`, true);
+
+        // Event listener for source filter checkboxes
+        document.querySelectorAll("input[name='source']").forEach(checkbox => {
+            checkbox.checked = true;
+            checkbox.addEventListener('change', applyFilters);
+            checkbox.addEventListener('change', handleSearchInput);
+        });
+
+        // Event listener for search input
+        document.getElementById('searchInput').addEventListener('keyup', handleSearchInput);
+
+        // Event listener for sort order toggle button
+        document.getElementById('toggleSortButton').addEventListener('click', toggleSortOrder);
+    });
+})();
+
