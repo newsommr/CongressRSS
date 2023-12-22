@@ -12,7 +12,8 @@
         'white-house-presidential-actions': 'White House',
         'house-rules-committee': 'House Rules Committee',
         'senateppg-twitter': 'Senate Periodical Press Gallery',
-        'housedailypress-twitter': 'House Press Gallery'
+        'housedailypress-twitter': 'House Press Gallery',
+        'doj-olc-opinions': 'Department of Justice, Office of Legal Counsel'
     };
 
     // Fetch from API with/without filtering
