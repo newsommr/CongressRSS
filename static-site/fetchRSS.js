@@ -24,7 +24,7 @@
             applySourceFilter ? applyFilters() : displayItems();
         } catch (error) {
             console.error("Failed to fetch RSS:", error);
-            document.getElementById('rss-content').innerHTML = 'Error fetching data.';
+            document.getElementById('rss-content').innerHTML = 'No results.';
         }
     }
 
