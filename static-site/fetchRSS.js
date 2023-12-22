@@ -61,7 +61,20 @@
     // Generate the HTML for each item to be displayed.
     function getItemHTML(item) {
         const title = item.title.length > TITLE_MAX_LENGTH ? `${item.title.substring(0, TITLE_MAX_LENGTH)}...` : item.title;
-        const localTimeString = getFormattedLocalTime(item.pubDate);
+        // Modified line: Format the date and time
+        var pubDate = new Date(item.pubDate);
+        const localOffset = pubDate.getTimezoneOffset();
+        const localTime = new Date(pubDate.getTime() - localOffset * 60000);
+        const localTimeString = localTime.toLocaleString('en-US', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true,
+            timeZoneName: 'short'
+        });
         const sourceName = sourceNameMapping[item.source.trim()] || item.source.trim();
 
         return `
