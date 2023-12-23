@@ -31,15 +31,19 @@
     // Display items with optional sorting and filtering
     function displayItems(sortOrder = currentSortOrder, filterSources = [], searchTerm = '') {
         let filteredItems = filterAndSortItems(items, filterSources, searchTerm, sortOrder);
+        console.log(filteredItems);
         renderItems(filteredItems);
     }
 
     // Filter and sort items
     function filterAndSortItems(items, filterSources, searchTerm, sortOrder) {
-        return items
+        try {
+            return items
             .filter(item => filterSources.length === 0 || filterSources.includes(item.source))
-            .filter(item => searchTerm.trim() === '' || item.title.toLowerCase().includes(searchTerm.toLowerCase()))
             .sort((a, b) => (sortOrder === 'asc' ? new Date(a.pubDate) - new Date(b.pubDate) : new Date(b.pubDate) - new Date(a.pubDate)));
+        } catch (error) {
+            console.log(error)
+        }
     }
 
     // Render items to the DOM
@@ -116,19 +120,9 @@
             .map(input => input.value);
     }
 
-    function fetchFilteredResults() {
-        const selectedSources = getSelectedSources();
-        let url = `${API_URL}search/${encodeURIComponent(lastSearchTerm)}`;
-
-        if (selectedSources.length === 0) return;
-
-        url += selectedSources.length > 0 ? `?sources=${encodeURIComponent(selectedSources.join(','))}` : '';
-        fetchRSS(url, true);
-    }
-
     function handleSearchInput() {
         const searchTerm = document.getElementById('searchInput').value;
-                lastSearchTerm = searchTerm;
+        lastSearchTerm = searchTerm;
 
         if (lastSearchTerm !== "") {
             fetchFilteredResults();
@@ -136,6 +130,17 @@
             fetchRSS(`${API_URL}?limit=500`, true);
         }
     }
+
+    function fetchFilteredResults() {
+        const selectedSources = getSelectedSources();
+        let url = `${API_URL}search/${encodeURIComponent(lastSearchTerm)}`;
+
+        if (selectedSources.length === 0) return;
+
+        url += `?sources=${encodeURIComponent(selectedSources.join(','))}`;
+        fetchRSS(url, true);
+    }
+
 
     // Initialization
     document.addEventListener('DOMContentLoaded', () => {
