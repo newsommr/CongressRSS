@@ -13,7 +13,8 @@
         'house-rules-committee': 'House Rules Committee',
         'senateppg-twitter': 'Senate Periodical Press Gallery',
         'housedailypress-twitter': 'House Press Gallery',
-        'doj-olc-opinions': 'Department of Justice, Office of Legal Counsel'
+        'doj-olc-opinions': 'Department of Justice, Office of Legal Counsel',
+        'gao-reports': 'Government Accountability Office'
     };
 
     // Fetch from API with/without filtering
