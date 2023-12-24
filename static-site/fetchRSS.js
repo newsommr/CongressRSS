@@ -32,7 +32,6 @@
     // Display items with optional sorting and filtering
     function displayItems(sortOrder = currentSortOrder, filterSources = [], searchTerm = '') {
         let filteredItems = filterAndSortItems(items, filterSources, searchTerm, sortOrder);
-        console.log(filteredItems);
         renderItems(filteredItems);
     }
 
