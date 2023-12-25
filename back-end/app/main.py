@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from app.rss_fetcher import fetch_rss_data
-from app.database import create_rss_item, get_db, Base, engine
+from app.database import Base, engine
+from app.crud import get_db, create_rss_item
 from app.api import router as api_router
-
+from app.rss_fetcher import fetch_rss_data, fetch_session_info
 # Initialize FastAPI app
 app = FastAPI()
 
@@ -42,6 +42,8 @@ def fetch_and_store_rss():
 
 # Schedule the task
 scheduler.add_job(fetch_and_store_rss, "interval", minutes=5)
+scheduler.add_job(fetch_session_info, "interval", minutes=720, args=["senateppg-twitter"])
+scheduler.add_job(fetch_session_info, "interval", minutes=720, args=["housedailypress-twitter"])
 scheduler.start()
 
 # Create database tables
@@ -52,3 +54,5 @@ app.include_router(api_router)
 
 # Check for new data
 fetch_and_store_rss();
+fetch_session_info("senateppg-twitter");
+fetch_session_info("housedailypress-twitter");

@@ -1,6 +1,6 @@
 (function() {
     const API_URL = "https://congress-rss.fly.dev/items/";
-    const TITLE_MAX_LENGTH = 250;
+    const TITLE_MAX_LENGTH = 1000;
 
     // State Variables
     let items = [];
