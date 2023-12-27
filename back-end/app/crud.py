@@ -1,64 +1,73 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-
+import logging
 from app.models import RSSItem, CongressInfo
 from app.database import SessionLocal
 from datetime import datetime
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# Constants
+SENATE_SOURCE = "senateppg-twitter"
+HOUSE_SOURCE = "housedailypress-twitter"
 
+def get_db():
+    """
+    Safely yields the database session.
+    """
+    with SessionLocal() as db:
+        yield db
+
+# Function to create RSS item
 def create_rss_item(db: Session, rss_item: dict) -> RSSItem:
-    existing_item = db.query(RSSItem).filter_by(title=rss_item['title'], link=rss_item['link']).first()
+    """
+    Adds new rss_items to the database.
+    """
+    title, link = rss_item['title'], rss_item['link']
+    existing_item = db.query(RSSItem).filter_by(title=title, link=link).first()
     if existing_item:
         return existing_item
 
     new_item = RSSItem(**rss_item, fetched_at=datetime.utcnow())
+    db.add(new_item)
     try:
-        db.add(new_item)
         db.commit()
-        db.refresh(new_item)
         return new_item
-    except IntegrityError:
+    except IntegrityError as e:
+        logging.error(f"An error occurred in adding an item to the database: {new_item}: {e}")
         db.rollback()
-        return db.query(RSSItem).filter_by(title=rss_item['title'], link=rss_item['link']).first()
+        return db.query(RSSItem).filter_by(title=title, link=link).first()
 
 def update_meeting_info(db: Session, source: str, next_meeting_date: str):
     """
-    Updates the meeting information in the database.
+    Updates or adds the meeting information in the database.
     """
     congress_info = db.query(CongressInfo).first()
     if congress_info:
         update_congress_info(congress_info, source, next_meeting_date)
     else:
-        add_new_congress_info(db, source, next_meeting_date)
+        congress_info = create_congress_info(source, next_meeting_date)
+        db.add(congress_info)
+
     try:
         db.commit()
     except SQLAlchemyError as e:
         db.rollback()
-
+        logging.error(f"An error occurred in updating the upcoming meeting information for Congress: {next_meeting_date}: {e}")
 
 def update_congress_info(congress_info, source: str, next_meeting_date: str):
     """
     Updates existing CongressInfo record.
     """
-    if source == "senateppg-twitter":
+    if source == SENATE_SOURCE:
         congress_info.senate_next_meeting = next_meeting_date
-    elif source == "housedailypress-twitter":
+    elif source == HOUSE_SOURCE:
         congress_info.house_next_meeting = next_meeting_date
     congress_info.last_updated = datetime.utcnow()
 
-
-def add_new_congress_info(db: Session, source: str, next_meeting_date: str):
+def create_congress_info(source: str, next_meeting_date: str) -> CongressInfo:
     """
-    Adds a new CongressInfo record to the database.
+    Creates a new CongressInfo record.
     """
-    if source == "senateppg-twitter":
-        congress_info = CongressInfo(senate_next_meeting=next_meeting_date)
-    elif source == "housedailypress-twitter":
-        congress_info = CongressInfo(house_next_meeting=next_meeting_date)
-    db.add(congress_info)
+    if source == SENATE_SOURCE:
+        return CongressInfo(senate_next_meeting=next_meeting_date, last_updated=datetime.utcnow())
+    elif source == HOUSE_SOURCE:
+        return CongressInfo(house_next_meeting=next_meeting_date, last_updated=datetime.utcnow())
