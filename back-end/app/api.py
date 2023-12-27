@@ -1,9 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, func
+from sqlalchemy import desc, func
 from app.models import RSSItem, CongressInfo
 from app.crud import get_db
-import logging
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,8 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 CHAMBER_SENATE = "senate"
 CHAMBER_HOUSE = "house"
 INVALID_LIMIT_DETAIL = "Invalid limit/offset value. Must be > 0"
-ITEMS_NOT_FOUND_DETAIL = "Items not found."
-INVALID_CHAMBER_DETAIL = "Invalid chamber specified."
+ITEMS_NOT_FOUND_DETAIL = "Items not found"
+INVALID_CHAMBER_DETAIL = "Invalid chamber specified"
+INTERNAL_SERVER_ERROR = "Internal server error"
 
 router = APIRouter()
 
@@ -33,7 +32,7 @@ async def read_items(limit: int = 100, offset: int = 0, db: AsyncSession = Depen
             .all()
         return items
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR)
 
 @router.get("/items/{source}")
 async def read_items_by_source(source: str, limit: int = 100, db: AsyncSession = Depends(get_db)):
@@ -51,7 +50,7 @@ async def read_items_by_source(source: str, limit: int = 100, db: AsyncSession =
             raise HTTPException(status_code=404, detail=ITEMS_NOT_FOUND_DETAIL)
         return items
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR)
 
 @router.get("/items/search/{search_term}")
 async def search_items(search_term: str, sources: str = "", limit: int = None, offset: int = 0, db: AsyncSession = Depends(get_db)):
@@ -101,4 +100,4 @@ async def get_congress_session_info(chamber: str, db: AsyncSession = Depends(get
         else:
             raise HTTPException(status_code=400, detail=INVALID_CHAMBER_DETAIL)
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR)

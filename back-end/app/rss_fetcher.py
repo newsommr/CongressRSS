@@ -3,26 +3,42 @@ from datetime import datetime
 import feedparser
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
+import logging
 
 from app.contact_llm import send_prompt
 from app.models import RSSItem, CongressInfo
-from app.crud import get_db, update_meeting_info
+from app.crud import get_db, update_meeting_info, create_rss_item
 
 # Constants for file paths
 SENATE_PROMPT_FILE = 'app/prompts/senate_prompt.txt'
 HOUSE_PROMPT_FILE = 'app/prompts/house_prompt.txt'
 
+def fetch_and_store_rss():
+    """
+    Fetches RSS feed data from multiple sources and stores it in the database.
+    """
+    db = next(get_db())
+    rss_feeds = [
+                    ("https://rules.house.gov/rss.xml", "house-rules-committee"), 
+                    ("https://www.whitehouse.gov/briefing-room/legislation/feed/", "white-house-legislation"),
+                    ("https://www.whitehouse.gov/briefing-room/presidential-actions/feed/rss", "white-house-presidential-actions"),
+                    ("https://nitter.x86-64-unknown-linux-gnu.zip/SenatePPG/rss", "senateppg-twitter"),
+                    ("https://nitter.x86-64-unknown-linux-gnu.zip/HouseDailyPress/rss", "housedailypress-twitter"),
+                    ("https://rssproxy.migor.org/api/w2f?v=0.1&url=https%3A%2F%2Fwww.justice.gov%2Folc%2Fopinions&link=.%2Farticle%5B1%5D%2Fdiv%5B1%5D%2Fh2%5B1%5D%2Fa%5B1%5D&context=%2F%2Fdiv%5B3%5D%2Fmain%5B1%5D%2Fdiv%5B2%5D%2Fdiv%5B3%5D%2Fdiv%5B1%5D%2Farticle%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B2%5D%2Fdiv%5B2%5D%2Fdiv%5B4%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B2%5D%2Fdiv&date=.%2Farticle%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B2%5D%2Fdiv%5B1%5D%2Ftime%5B1%5D&re=none&out=atom", "doj-olc-opinions"),
+                    ("https://rssproxy.migor.org/api/w2f?v=0.1&url=https%3A%2F%2Fwww.gao.gov%2Freports-testimonies&link=.%2Fdiv%5B1%5D%2Fspan%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fh4%5B1%5D%2Fa%5B1%5D&context=%2F%2Fdiv%5B1%5D%2Fdiv%5B3%5D%2Fdiv%5B4%5D%2Fmain%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B2%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fsection%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv&date=.%2Fdiv%5B1%5D%2Fspan%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fspan%5B1%5D%2Ftime%5B1%5D&re=none&out=atom", "gao-reports")
+                ]
 
-def fetch_rss_data(rss_url: str, source: str) -> list:
-    """
-    Fetches and parses the RSS feed data from a given URL.
-    """
-    try:
-        parsed_data = feedparser.parse(rss_url)
-        return [parse_entry(entry, source) for entry in parsed_data.entries if is_valid_entry(entry)]
-    except feedparser.FeedParserError as e:
-        logger.error(f"An error occurred in fetching RSS data: {e}")
-        return []
+    for rss_url, source in rss_feeds:
+        try:
+            parsed_data = feedparser.parse(rss_url)
+            entries = [entry for entry in parsed_data.entries if is_valid_entry(entry)]
+
+            for entry in entries:
+                item = parse_entry(entry, source)
+                create_rss_item(db, item)
+
+        except Exception as e:
+            logging.error(f"An error occurred in fetching RSS data from {rss_url}: {e}")
 
 
 def is_valid_entry(entry) -> bool:
@@ -61,7 +77,11 @@ def fetch_session_info(source: str):
     Fetches session information from the database and sends a prompt to the LLM.
     """
     db = next(get_db())
-    items = fetch_items_from_db(db, source)
+    items = db.query(RSSItem)\
+             .filter(RSSItem.source == source)\
+             .order_by(desc(RSSItem.pubDate))\
+             .limit(15)\
+             .all()
     items_str = "\n".join([f"Title: {item.title}, Date: {item.pubDate}" for item in items])
     current_date = datetime.now().strftime("%B %d, %Y")
     prompt_template = get_prompt_template(source)
@@ -70,18 +90,6 @@ def fetch_session_info(source: str):
     next_meeting_date = send_prompt(prompt)
     if not re.search(r'unknown', next_meeting_date, re.IGNORECASE):
         update_meeting_info(db, source, next_meeting_date)
-
-
-def fetch_items_from_db(db: Session, source: str):
-    """
-    Fetches items from the database based on the source.
-    """
-    return db.query(RSSItem)\
-             .filter(RSSItem.source == source)\
-             .order_by(desc(RSSItem.pubDate))\
-             .limit(15)\
-             .all()
-
 
 def get_prompt_template(source: str) -> str:
     """

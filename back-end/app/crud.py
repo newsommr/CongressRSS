@@ -17,7 +17,7 @@ def create_rss_item(db: Session, rss_item: dict) -> RSSItem:
     if existing_item:
         return existing_item
 
-    new_item = RSSItem(**rss_item, fetched_at=datetime.datetime.utcnow())
+    new_item = RSSItem(**rss_item, fetched_at=datetime.utcnow())
     try:
         db.add(new_item)
         db.commit()
