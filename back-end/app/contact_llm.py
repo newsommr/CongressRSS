@@ -1,8 +1,9 @@
 from openai import OpenAI
+import os
 
 def send_prompt(prompt: str):
     openai = OpenAI(
-        api_key="mz2mkFfSyBNpQ8Saopp59beVEPZWArbA",
+        api_key=os.environ['DEEPINFRA_API_KEY'],
         base_url="https://api.deepinfra.com/v1/openai",
     )
     chat_completion = openai.chat.completions.create(
