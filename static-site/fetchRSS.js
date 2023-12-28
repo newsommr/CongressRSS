@@ -17,6 +17,18 @@
         'gao-reports': 'Government Accountability Office'
     };
 
+    const sourceLinkMapping = { 
+        'white-house-legislation': "https://www.whitehouse.gov/briefing-room/legislation/",
+        'white-house-presidential-actions': 'https://www.whitehouse.gov/briefing-room/presidential-actions/',
+        'house-rules-committee': 'https://rules.house.gov/legislation',
+        'senateppg-twitter': 'https://twitter.com/senateppg',
+        'housedailypress-twitter': 'https://twitter.com/housedailypress',
+        'doj-olc-opinions': 'https://www.justice.gov/olc/opinions',
+        'gao-reports':  'https://www.gao.gov/reports-testimonies'
+    }
+
+
+
     // Fetch from API with/without filtering
     async function fetchRSS(url, applySourceFilter = false) {
         try {
@@ -81,12 +93,13 @@
             timeZoneName: 'short'
         });
         const sourceName = sourceNameMapping[item.source.trim()] || item.source.trim();
+        const sourceLink = sourceLinkMapping[item.source.trim()] || item.source.trim();
 
         return `
             <div class='item-text'>
                 <a href='${item.link}'target="_blank">${title}</a>
                 <p> Published: ${localTimeString}<br>
-                Source: ${sourceName}</p>
+                Source: <a class='item-source' href='${sourceLink}'target="_blank">${sourceName}</a></p>
             </div>
         `;
     }
