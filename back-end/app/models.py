@@ -11,9 +11,18 @@ class RSSItem(Base):
     source = Column(String)
     fetched_at = Column(DateTime, default=datetime.datetime.utcnow)
 
-class CongressInfo(Base):
-    __tablename__ = "congress_info"
+class HouseInfo(Base):
+    __tablename__ = "house_info"
     id = Column(Integer, primary_key=True)
-    senate_next_meeting = Column(String, default="")
-    house_next_meeting = Column(String, default="")
+    next_meeting = Column(String, default="")
+    in_session = Column(Integer, default=0)
+    live_link = Column(String, default="")
+    last_updated = Column(DateTime, default=datetime.datetime.utcnow)
+
+class SenateInfo(Base):
+    __tablename__ = "senate_info"
+    id = Column(Integer, primary_key=True)
+    next_meeting = Column(String, default="")
+    in_session = Column(Integer, default=0)
+    live_link = Column(String, default="")
     last_updated = Column(DateTime, default=datetime.datetime.utcnow)

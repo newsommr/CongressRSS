@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import desc, func
-from app.models import RSSItem, CongressInfo
+from app.models import RSSItem, SenateInfo, HouseInfo
 from app.crud import get_db
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -89,15 +89,23 @@ async def get_congress_session_info(chamber: str, db: AsyncSession = Depends(get
     Get next meeting information for a specific congressional chamber.
     """
     try:
-        session_info = db.query(CongressInfo).first()
-        if not session_info:
-            raise HTTPException(status_code=404, detail=ITEMS_NOT_FOUND_DETAIL)
-
         if chamber == CHAMBER_SENATE:
-            return session_info.senate_next_meeting
+            result = db.query(SenateInfo).first()
+            return {
+                "in_session": result.in_session,
+                "next_meeting": result.next_meeting,
+                "live_link": result.live_link,
+                "last_updated": result.last_updated,
+            }
         elif chamber == CHAMBER_HOUSE:
-            return session_info.house_next_meeting
+            result = db.query(HouseInfo).first()
+            return {
+                "in_session": result.in_session,
+                "next_meeting": result.next_meeting,
+                "live_link": result.live_link,
+                "last_updated": result.last_updated,
+            }
         else:
             raise HTTPException(status_code=400, detail=INVALID_CHAMBER_DETAIL)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR)
+        raise HTTPException(status_code=500, detail=str(e))

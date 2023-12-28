@@ -1,17 +1,22 @@
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 import feedparser
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 import logging
+import pytz
+import requests
 
 from app.contact_llm import send_prompt
-from app.models import RSSItem, CongressInfo
+from app.models import RSSItem, HouseInfo, SenateInfo
 from app.crud import get_db, update_meeting_info, create_rss_item
 
 # Constants for file paths
 SENATE_PROMPT_FILE = 'app/prompts/senate_prompt.txt'
 HOUSE_PROMPT_FILE = 'app/prompts/house_prompt.txt'
+
+SENATE_SOURCE = "senateppg-twitter"
+HOUSE_SOURCE = "housedailypress-twitter"
 
 def fetch_and_store_rss():
     """
@@ -77,19 +82,64 @@ def fetch_session_info(source: str):
     Fetches session information from the database and sends a prompt to the LLM.
     """
     db = next(get_db())
-    items = db.query(RSSItem)\
-             .filter(RSSItem.source == source)\
-             .order_by(desc(RSSItem.pubDate))\
-             .limit(15)\
-             .all()
-    items_str = "\n".join([f"Title: {item.title}, Date: {item.pubDate}" for item in items])
-    current_date = datetime.now().strftime("%B %d, %Y")
-    prompt_template = get_prompt_template(source)
-    prompt = prompt_template.format(current_date=current_date) + "\n\n" + items_str
 
-    next_meeting_date = send_prompt(prompt)
-    if not re.search(r'unknown', next_meeting_date, re.IGNORECASE):
-        update_meeting_info(db, source, next_meeting_date)
+    if source == SENATE_SOURCE:
+        in_session, next_meeting, live_link = get_senate_floor_info()
+        update_meeting_info(db, source, in_session, next_meeting, live_link)
+    if source == HOUSE_SOURCE:
+        in_session = get_house_floor_info()
+        update_meeting_info(db, source, in_session, None)
+
+def get_house_floor_info():
+    try:
+        response = requests.get("https://in-session.house.gov/")
+        in_session = int(response.text)
+        return in_session
+    except ValueError as e:
+        logging.error("Couldn't parse string as an int: {response} - {e}")
+    except Exception as e:
+        logging.error("Couldn't get House session information: {response} - {e}")
+
+def get_senate_floor_info():
+    try:
+        response = requests.get("https://www.senate.gov/legislative/schedule/floor_schedule.json")
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Error retrieving the Senate floor schedule: {e}")
+        return None, None
+
+    data = response.json()
+    proceedings = data.get('floorProceedings', [])
+    current_date_time_utc = datetime.now(timezone.utc)
+
+    for item in proceedings:
+        try:
+            convene_date_time_utc = convert_to_utc(
+                int(item['conveneYear']),
+                int(item['conveneMonth']),
+                int(item['conveneDay']),
+                int(item['conveneHour']),
+                int(item['conveneMinutes'])
+            )
+
+            if current_date_time_utc >= convene_date_time_utc:
+                in_session = 1
+            else:
+                in_session = 0
+            live_link = item['convenedSessionStream']
+        except Exception as e:
+            logging.warning(f"Error processing item in proceedings: {item} - {e}")
+
+    return in_session, convene_date_time_utc, live_link
+
+def convert_to_utc(year, month, day, hour, minute, timezone='America/New_York'):
+    """
+    Convert a given date and time from a specified timezone to UTC.
+    """
+    local = pytz.timezone(timezone)
+    local_dt = local.localize(datetime(year, month, day, hour, minute))
+    utc_dt = local_dt.astimezone(pytz.utc)
+    return utc_dt
 
 def get_prompt_template(source: str) -> str:
     """

@@ -9,7 +9,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://congress.cipherkeeper.dev"],
+    allow_origins=["https://congress.cipherkeeper.dev", "*"],
     allow_credentials=False,
     allow_methods=["GET"],
     allow_headers=["Content-Type", "Accept"],

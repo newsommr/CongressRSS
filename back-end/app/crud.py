@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 import logging
-from app.models import RSSItem, CongressInfo
+from app.models import RSSItem, HouseInfo, SenateInfo
 from app.database import SessionLocal
 from datetime import datetime
 
@@ -36,38 +36,62 @@ def create_rss_item(db: Session, rss_item: dict) -> RSSItem:
         db.rollback()
         return db.query(RSSItem).filter_by(title=title, link=link).first()
 
-def update_meeting_info(db: Session, source: str, next_meeting_date: str):
+def update_meeting_info(db: Session, source: str, in_session: int, next_meeting = None, live_link: str = None):
     """
     Updates or adds the meeting information in the database.
     """
-    congress_info = db.query(CongressInfo).first()
-    if congress_info:
-        update_congress_info(congress_info, source, next_meeting_date)
-    else:
-        congress_info = create_congress_info(source, next_meeting_date)
-        db.add(congress_info)
+
+    if source == SENATE_SOURCE:
+        senate_info = db.query(SenateInfo).first()
+
+        if senate_info:
+            update_senate_info(senate_info, in_session, next_meeting, live_link)
+        else:
+            senate_info = create_senate_info(in_session, next_meeting, live_link)
+            db.add(senate_info)
+
+    elif source == HOUSE_SOURCE:
+        house_info = db.query(HouseInfo).first()
+
+        if house_info:
+            update_house_info(house_info, in_session, next_meeting, live_link)
+        else:
+            house_info = create_house_info(in_session, next_meeting, live_link)
+            db.add(house_info)
 
     try:
         db.commit()
     except SQLAlchemyError as e:
         db.rollback()
-        logging.error(f"An error occurred in updating the upcoming meeting information for Congress: {next_meeting_date}: {e}")
+        logging.error(f"An error occurred in updating the upcoming meeting information for Congress: {e}")
 
-def update_congress_info(congress_info, source: str, next_meeting_date: str):
+def update_senate_info(senate_info, in_session: int, next_meeting, live_link):
     """
-    Updates existing CongressInfo record.
+    Updates existing SenateInfo record.
     """
-    if source == SENATE_SOURCE:
-        congress_info.senate_next_meeting = next_meeting_date
-    elif source == HOUSE_SOURCE:
-        congress_info.house_next_meeting = next_meeting_date
-    congress_info.last_updated = datetime.utcnow()
+    senate_info.in_session = in_session
+    senate_info.next_meeting = next_meeting
+    senate_info.live_link = live_link
+    senate_info.last_updated = datetime.utcnow()
 
-def create_congress_info(source: str, next_meeting_date: str) -> CongressInfo:
+
+def update_house_info(house_info, in_session: int, next_meeting, live_link):
     """
-    Creates a new CongressInfo record.
+    Updates existing HouseInfo record.
     """
-    if source == SENATE_SOURCE:
-        return CongressInfo(senate_next_meeting=next_meeting_date, last_updated=datetime.utcnow())
-    elif source == HOUSE_SOURCE:
-        return CongressInfo(house_next_meeting=next_meeting_date, last_updated=datetime.utcnow())
+    house_info.in_session = in_session
+    house_info.next_meeting = next_meeting
+    house_info.live_link = live_link
+    house_info.last_updated = datetime.utcnow()
+    
+def create_senate_info(in_session: int, next_meeting, live_link) -> SenateInfo:
+    """
+    Creates a new SenateInfo record.
+    """
+    return SenateInfo(in_session=in_session, next_meeting=next_meeting, live_link=live_link, last_updated=datetime.utcnow())
+
+def create_house_info(in_session: int, next_meeting, live_link) -> HouseInfo:
+    """
+    Creates a new HouseInfo record.
+    """
+    return HouseInfo(in_session=in_session, next_meeting=next_meeting, live_link=live_link, last_updated=datetime.utcnow())
