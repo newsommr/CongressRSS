@@ -4,9 +4,9 @@ async function fetchSessionStatus(sessionType, elementId) {
         const data = await response.json();
         let result;
 
-        if (data.in_session === 1) {
+        if (data.in_session === 0) {
             result = `${sessionType.charAt(0).toUpperCase() + sessionType.slice(1)}: Adjourned`;
-        } else if (data.in_session === 0) {
+        } else if (data.in_session === 1) {
             result = `${sessionType.charAt(0).toUpperCase() + sessionType.slice(1)}: `;
             if (sessionType === 'senate' && data.live_link) {
                 const link = document.createElement('a');
