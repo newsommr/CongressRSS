@@ -84,7 +84,7 @@
 
         return `
             <div class='item-text'>
-                <a href='${item.link}'>${title}</a>
+                <a href='${item.link}'target="_blank">${title}</a>
                 <p> Published: ${localTimeString}<br>
                 Source: ${sourceName}</p>
             </div>
