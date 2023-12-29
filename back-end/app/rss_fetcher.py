@@ -49,13 +49,11 @@ def fetch_and_store_rss():
         finally:
             db.close()
 
-
 def is_valid_entry(entry) -> bool:
     """
     Checks if the entry has the required attributes.
     """
     return all(hasattr(entry, attr) for attr in ['title', 'link', 'published_parsed'])
-
 
 def parse_entry(entry, source: str) -> dict:
     """
@@ -70,7 +68,6 @@ def parse_entry(entry, source: str) -> dict:
         "pubDate": datetime(*entry.published_parsed[:6]),
         "source": source
     }
-
 
 def handle_twitter_urls(entry):
     """

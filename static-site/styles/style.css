@@ -59,8 +59,32 @@ body {
 .session-status span {
     font-weight: bold;
     color: #333;
+    cursor: pointer;
+    position: relative;
+    display: inline-block;
 }
 
 .item-source {
     color: inherit !important; 
+}
+
+#houseSessionStatus .session-next-date,
+#senateSessionStatus .session-next-date {
+    display: none;
+    position: absolute;
+    left: 0;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    padding: 5px 10px;
+    z-index: 1;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
+}
+
+#houseSessionStatus:hover .session-next-date,
+#senateSessionStatus:hover .session-next-date {
+    display: block;
+    opacity: 1;
 }
