@@ -42,8 +42,12 @@ def fetch_and_store_rss():
                 item = parse_entry(entry, source)
                 create_rss_item(db, item)
 
+            db.commit()
         except Exception as e:
             logging.error(f"An error occurred in fetching RSS data from {rss_url}: {e}")
+            db.rollback()
+        finally:
+            db.close()
 
 
 def is_valid_entry(entry) -> bool:
@@ -83,12 +87,19 @@ def fetch_session_info(source: str):
     """
     db = next(get_db())
 
-    if source == SENATE_SOURCE:
-        in_session, next_meeting, live_link = get_senate_floor_info()
-        update_meeting_info(db, source, in_session, next_meeting, live_link)
-    if source == HOUSE_SOURCE:
-        in_session = get_house_floor_info()
-        update_meeting_info(db, source, in_session, None)
+    try:
+        if source == SENATE_SOURCE:
+            in_session, next_meeting, live_link = get_senate_floor_info()
+            update_meeting_info(db, source, in_session, next_meeting, live_link)
+        if source == HOUSE_SOURCE:
+            in_session = get_house_floor_info()
+            update_meeting_info(db, source, in_session, None)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        logging.error(f"An error occurred in updating the upcoming meeting information for Congress: {e}")
+    finally:
+        db.close()
 
 def get_house_floor_info():
     try:
@@ -106,7 +117,7 @@ def get_senate_floor_info():
         response.raise_for_status()
     except requests.exceptions.RequestException as e:
         logging.error(f"Error retrieving the Senate floor schedule: {e}")
-        return None, None
+        return
 
     data = response.json()
     proceedings = data.get('floorProceedings', [])

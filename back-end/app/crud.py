@@ -24,17 +24,10 @@ def create_rss_item(db: Session, rss_item: dict) -> RSSItem:
     title, link = rss_item['title'], rss_item['link']
     existing_item = db.query(RSSItem).filter_by(title=title, link=link).first()
     if existing_item:
-        return existing_item
+        return
 
     new_item = RSSItem(**rss_item, fetched_at=datetime.utcnow())
     db.add(new_item)
-    try:
-        db.commit()
-        return new_item
-    except IntegrityError as e:
-        logging.error(f"An error occurred in adding an item to the database: {new_item}: {e}")
-        db.rollback()
-        return db.query(RSSItem).filter_by(title=title, link=link).first()
 
 def update_meeting_info(db: Session, source: str, in_session: int, next_meeting = None, live_link: str = None):
     """
