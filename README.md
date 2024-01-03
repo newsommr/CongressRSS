@@ -53,18 +53,74 @@ To run the front-end, you just need to open the `index.html` file in your web br
 
 Due to CORS, the site will not work without updating the list of acceptable origins in `main.py` in the back-end.
 
-## API Endpoints
+### API Endpoints
 
-The back-end exposes the following API endpoints:
-
-- `GET /items/`: Fetches all items in the `RSSItem` table. You can limit the number of items by passing a `limit` and/or offset query parameter. By default, limit is 100, and offset is 0.
-https://congress-rss.fly.dev/items/?limit=3&offset=300 returns [{"id":52,"link":"https://www.whitehouse.gov/briefing-room/legislation/2023/11/13/press-release-bills-signed-h-r-366-h-r-1226/","source":"white-house-legislation","pubDate":"2023-11-13T17:17:22","title":"Press Release: Bills Signed: H.R. 366, H.R. 1226","fetched_at":"2023-12-13T07:09:02.860506"},{"id":31,"link":"https://rules.house.gov/video/rules-committee-hearing-5894-and-hr-6363","source":"house-rules-committee","pubDate":"2023-11-13T16:18:00","title":"Rules Committee Hearing 5894 and H.R. 6363","fetched_at":"2023-12-13T07:09:02.751020"},{"id":32,"link":"https://rules.house.gov/bill/118/hr-cr","source":"house-rules-committee","pubDate":"2023-11-11T20:23:00","title":"H.R. 6363 - Further Continuing Appropriations and Extensions Act, 2024","fetched_at":"2023-12-13T07:09:02.753200"}]
-- `GET /items/{source}`: Fetches all items in the `RSSItem` table from a specific source. You can limit the number of items by passing a `limit` and/or offset query parameter. By default, limit is 100, and offset is 0.
-https://congress-rss.fly.dev/items/senateppg-twitter?limit=2 returns [{"id":333,"link":"https://twitter.com/SenatePPG/status/1740758987489046694#m","source":"senateppg-twitter","pubDate":"2023-12-29T15:37:39","title":"Senator Murphy (D-CT) presided today and no business was conducted.","fetched_at":"2023-12-29T15:41:37.935018"},{"id":327,"link":"https://twitter.com/SenatePPG/status/1740715555831845261#m","source":"senateppg-twitter","pubDate":"2023-12-29T12:45:04","title":"The Second Session of the 118th Congress will convene on Wednesday, January 3, 2024 at 12 noon for a pro forma session only, with no business conducted.\n\nThe Senate will then convene for pro forma sessions on the following dates and times:\n\nFriday, January 5, 2024 at 10:00 a.m.","fetched_at":"2023-12-29T12:53:37.570786"}]
-- `GET /items/search/{search_term}`: Searches all items in the `RSSItem` table. You can limit the number of items by passing a `limit` and/or offset query parameter. By default, limit is None, and offset is 0.
-https://congress-rss.fly.dev/items/search/NDAA?limit=3 returns [{"id":95,"link":"https://twitter.com/SenatePPG/status/1735023156622942355#m","source":"senateppg-twitter","pubDate":"2023-12-13T19:45:30","title":"Vote update: 2 votes at 5pm today.\n\n1. Motion to waive Paul point of order with respect to the conference report to accompany H.R.2670, the #NDAA \n2. Adoption of the conference report to accompany H.R.2670, the #NDAA","fetched_at":"2023-12-13T19:46:31.957313"},{"id":92,"link":"https://twitter.com/SenatePPG/status/1734981329433894937#m","source":"senateppg-twitter","pubDate":"2023-12-13T16:59:17","title":"The Senate has resumed consideration of the conference report to accompany H.R.2670, the #NDAA, post-cloture.\n\nThere are no votes scheduled. \n\nUnder the regular order, unless an agreement is reached, the 30 hours of post-cloture time expires at  approximately 12:30am ET tonight.","fetched_at":"2023-12-13T17:52:51.920921"},{"id":80,"link":"https://twitter.com/SenatePPG/status/1734667686246834468#m","source":"senateppg-twitter","pubDate":"2023-12-12T20:12:59","title":"The Senate is now voting on the Ernst Motion to Table the Schumer Motion to Recommit (NDAA Conference Report).","fetched_at":"2023-12-13T07:10:51.028224"}]
-- `GET /info/session/{chamber}`: Gets the next meeting information for the `House` or `Senate` based on the specified `chamber` parameter.
-https://congress-rss.fly.dev/info/session/senate returns {"in_session":0,"next_meeting":"2024-01-02 16:45:00+00:00","live_link":"https://www.senate.gov/isvp/stv.html?type=live&comm=stv&filename=stv010224","last_updated":"2024-01-01T04:22:36.559394"}
+#### Fetch All RSSItems
+- **Endpoint:** `GET /items/`
+- **Description:** Fetches all items in the `RSSItem` table.
+- **Parameters:**
+  - `limit`: Limit the number of items (default is 100).
+  - `offset`: Pagination offset (default is 0).
+- **Example Request:**
+https://congress-rss.fly.dev/items/?limit=3&offset=300
+- **Example Response:**
+```json
+[
+  {
+    "id": 52,
+    "link": "https://www.whitehouse.gov/briefing-room/legislation/2023/11/13/press-release-bills-signed-h-r-366-h-r-1226/",
+    "source": "white-house-legislation",
+    "pubDate": "2023-11-13T17:17:22",
+    "title": "Press Release: Bills Signed: H.R. 366, H.R. 1226",
+    "fetched_at": "2023-12-13T07:09:02.860506"
+  },
+  {
+    "id": 31,
+    "link": "https://rules.house.gov/video/rules-committee-hearing-5894-and-hr-6363",
+    "source": "house-rules-committee",
+    "pubDate": "2023-11-13T16:18:00",
+    "title": "Rules Committee Hearing 5894 and H.R. 6363",
+    "fetched_at": "2023-12-13T07:09:02.751020"
+  },
+  {
+    "id": 32,
+    "link": "https://rules.house.gov/bill/118/hr-cr",
+    "source": "house-rules-committee",
+    "pubDate": "2023-11-11T20:23:00",
+    "title": "H.R. 6363 - Further Continuing Appropriations and Extensions Act, 2024",
+    "fetched_at": "2023-12-13T07:09:02.753200"
+  }
+]
+```
+#### Fetch All RSSItems by Source
+- **Endpoint:** `GET /items/{source}`
+- **Description:** Fetches all items in the `RSSItem` table from a specific source.
+- **Parameters:**
+  - `limit`: Limit the number of items (default is 100).
+  - `offset`: Pagination offset (default is 0).
+- **Example Request:**
+https://congress-rss.fly.dev/items/senateppg-twitter?limit=2
+- **Example Response:**
+```json
+[
+  {
+    "id": 333,
+    "link": "https://twitter.com/SenatePPG/status/1740758987489046694#m",
+    "source": "senateppg-twitter",
+    "pubDate": "2023-12-29T15:37:39",
+    "title": "Senator Murphy (D-CT) presided today and no business was conducted.",
+    "fetched_at": "2023-12-29T15:41:37.935018"
+  },
+  {
+    "id": 327,
+    "link": "https://twitter.com/SenatePPG/status/1740715555831845261#m",
+    "source": "senateppg-twitter",
+    "pubDate": "2023-12-29T12:45:04",
+    "title": "The Second Session of the 118th Congress will convene on Wednesday, January 3, 2024 at 12 noon for a pro forma session only, with no business conducted.",
+    "fetched_at": "2023-12-29T12:53:37.570786"
+  }
+]
+```
 
 The valid sources that can be fetched are:
 - `'white-house-legislation'`: Fetches signed legislation from the White House.
@@ -75,8 +131,41 @@ The valid sources that can be fetched are:
 - `'doj-olc-opinions'`: Fetches released opinions from the Office of Legal Counsel in the Department of Justice.
 - `'gao-reports'`: Fetches new reports from the Government Accountability Office.
 
-For example, to fetch items from the House Rules Committee, you would use the endpoint `GET /items/house-rules-committee`.
-
+#### Search through all RSSItems
+- **Endpoint:** `GET /items/search/{search_term}`
+- **Description:** Searches all items in the RSSItem table based on the title attribute.
+- **Parameters:**
+  - `limit`: Limit the number of items (default is 100).
+  - `offset`: Pagination offset (default is 0).
+- **Example Request:**
+https://congress-rss.fly.dev/items/senateppg-twitter?limit=1
+- **Example Response:**
+```json
+[
+  {
+    "id": 95,
+    "link": "https://twitter.com/SenatePPG/status/1735023156622942355#m",
+    "source": "senateppg-twitter",
+    "pubDate": "2023-12-13T19:45:30",
+    "title": "Vote update: 2 votes at 5pm today. 1. Motion to waive Paul point of order with respect to the conference report to accompany H.R.2670, the #NDAA 2. Adoption of the conference report to accompany H.R.2670, the #NDAA",
+    "fetched_at": "2023-12-13T19:46:31.957313"
+  }
+]
+```
+#### Get Next Meeting Information
+- **Endpoint:** `GET /info/session/{chamber}`
+- **Description:** Gets the next meeting information for the House or Senate based on the specified chamber parameter.
+- **Example Request:**
+https://congress-rss.fly.dev/info/session/senate
+- **Example Response:**
+```json
+{
+  "in_session": 0,
+  "next_meeting": "2024-01-02 16:45:00+00:00",
+  "live_link": "https://www.senate.gov/isvp/stv.html?type=live&comm=stv&filename=stv010224",
+  "last_updated": "2024-01-01T04:22:36.559394"
+}
+```
 ## Contributing
 
 All contributions are welcome, especially if you have found a useful feed to pull from! Please feel free to submit a pull request.
