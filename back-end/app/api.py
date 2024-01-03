@@ -35,15 +35,16 @@ async def read_items(limit: int = 100, offset: int = 0, db: AsyncSession = Depen
         raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR)
 
 @router.get("/items/{source}")
-async def read_items_by_source(source: str, limit: int = 100, db: AsyncSession = Depends(get_db)):
+async def read_items_by_source(source: str, limit: int = 100, offset: int = 0, db: AsyncSession = Depends(get_db)):
     """
     Get RSS items by source with pagination.
     """
-    if limit <= 0:
+    if limit <= 0 or offset < 0:
         raise HTTPException(status_code=400, detail=INVALID_LIMIT_DETAIL)
     try:
         items = db.query(RSSItem)\
                   .filter(RSSItem.source == source)\
+                  .offset(offset)\
                   .order_by(desc(RSSItem.pubDate))\
                   .limit(limit).all()
         if not items:
