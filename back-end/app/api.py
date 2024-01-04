@@ -43,9 +43,9 @@ async def read_items_by_source(source: str, limit: int = 100, offset: int = 0, d
         raise HTTPException(status_code=400, detail=INVALID_LIMIT_DETAIL)
     try:
         items = db.query(RSSItem)\
+                  .order_by(desc(RSSItem.pubDate))\
                   .filter(RSSItem.source == source)\
                   .offset(offset)\
-                  .order_by(desc(RSSItem.pubDate))\
                   .limit(limit).all()
         if not items:
             raise HTTPException(status_code=404, detail=ITEMS_NOT_FOUND_DETAIL)
