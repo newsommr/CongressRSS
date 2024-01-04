@@ -14,7 +14,7 @@ class RSSItem(Base):
 class HouseInfo(Base):
     __tablename__ = "house_info"
     id = Column(Integer, primary_key=True)
-    next_meeting = Column(String, default="")
+    next_meeting = Column(DateTime, default=None)
     in_session = Column(Integer, default=0)
     live_link = Column(String, default="")
     last_updated = Column(DateTime, default=datetime.datetime.utcnow)
@@ -22,7 +22,7 @@ class HouseInfo(Base):
 class SenateInfo(Base):
     __tablename__ = "senate_info"
     id = Column(Integer, primary_key=True)
-    next_meeting = Column(String, default="")
+    next_meeting = Column(DateTime, default=None)
     in_session = Column(Integer, default=0)
     live_link = Column(String, default="")
     last_updated = Column(DateTime, default=datetime.datetime.utcnow)

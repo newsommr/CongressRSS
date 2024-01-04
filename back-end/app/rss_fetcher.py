@@ -89,8 +89,8 @@ def fetch_session_info(source: str):
             in_session, next_meeting, live_link = get_senate_floor_info()
             update_meeting_info(db, source, in_session, next_meeting, live_link)
         if source == HOUSE_SOURCE:
-            in_session = get_house_floor_info()
-            update_meeting_info(db, source, in_session, None)
+            in_session, next_meeting = get_house_floor_info(db)
+            update_meeting_info(db, source, in_session, next_meeting)
         db.commit()
     except Exception as e:
         db.rollback()
@@ -98,15 +98,36 @@ def fetch_session_info(source: str):
     finally:
         db.close()
 
-def get_house_floor_info():
+def get_house_floor_info(db):
     try:
         response = requests.get("https://in-session.house.gov/")
         in_session = int(response.text)
-        return in_session
+        items = db.query(RSSItem)\
+             .filter(RSSItem.source == HOUSE_SOURCE)\
+             .order_by(desc(RSSItem.pubDate))\
+             .limit(15)\
+             .all()
+        items_str = "\n".join([f"Title: {item.title}, Date: {item.pubDate}" for item in items])
+        current_date = datetime.now().strftime("%B %d, %Y")
+        prompt_template = get_prompt_template(HOUSE_SOURCE)
+        prompt = prompt_template.format(current_date=current_date) + "\n\n" + items_str
+
+        next_meeting_date_str = send_prompt(prompt)
+        next_meeting_date = datetime.fromisoformat(next_meeting_date_str)
+
+        year = next_meeting_date.year
+        month = next_meeting_date.month
+        day = next_meeting_date.day
+        hour = next_meeting_date.hour
+        minute = next_meeting_date.minute
+
+        # Convert to UTC using your function
+        next_meeting_date_utc = convert_to_utc(year, month, day, hour, minute)
+        return in_session, next_meeting_date_utc
     except ValueError as e:
-        logging.error("Couldn't parse string as an int: {response} - {e}")
+        logging.error(f"Couldn't parse string as an int: {response} - {e}")
     except Exception as e:
-        logging.error("Couldn't get House session information: {response} - {e}")
+        logging.error(f"Couldn't get House session information: {response} - {e}")
 
 def get_senate_floor_info():
     try:

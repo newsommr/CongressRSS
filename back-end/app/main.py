@@ -31,6 +31,6 @@ scheduler = AsyncIOScheduler()
 
 # Schedule the task
 scheduler.add_job(fetch_and_store_rss, "interval", minutes=2)
-scheduler.add_job(fetch_session_info, "interval", minutes=3, args=["senateppg-twitter"])
-scheduler.add_job(fetch_session_info, "interval", minutes=4, args=["housedailypress-twitter"])
+scheduler.add_job(fetch_session_info, "interval", minutes=10, args=["senateppg-twitter"])
+scheduler.add_job(fetch_session_info, "interval", minutes=10, args=["housedailypress-twitter"])
 scheduler.start()
