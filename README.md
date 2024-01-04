@@ -138,18 +138,34 @@ The valid sources that can be fetched are:
   - `limit`: Limit the number of items (default is 100).
   - `offset`: Pagination offset (default is 0).
 - **Example Request:**
-https://congress-rss.fly.dev/items/senateppg-twitter?limit=1
+https://congress-rss.fly.dev/items/search/NDAA?limit=3
 - **Example Response:**
 ```json
 [
-  {
-    "id": 95,
-    "link": "https://twitter.com/SenatePPG/status/1735023156622942355#m",
-    "source": "senateppg-twitter",
-    "pubDate": "2023-12-13T19:45:30",
-    "title": "Vote update: 2 votes at 5pm today. 1. Motion to waive Paul point of order with respect to the conference report to accompany H.R.2670, the #NDAA 2. Adoption of the conference report to accompany H.R.2670, the #NDAA",
-    "fetched_at": "2023-12-13T19:46:31.957313"
-  }
+    {
+        "title": "Vote update: 2 votes at 5pm today.\n\n1. Motion to waive Paul point of order with respect to the conference report to accompany H.R.2670, the #NDAA \n2. Adoption of the conference report to accompany H.R.2670, the #NDAA",
+        "pubDate": "2023-12-13T19:45:30",
+        "id": 95,
+        "fetched_at": "2023-12-13T19:46:31.957313",
+        "source": "senateppg-twitter",
+        "link": "https://twitter.com/SenatePPG/status/1735023156622942355#m"
+    },
+    {
+        "title": "The Senate has resumed consideration of the conference report to accompany H.R.2670, the #NDAA, post-cloture.\n\nThere are no votes scheduled. \n\nUnder the regular order, unless an agreement is reached, the 30 hours of post-cloture time expires at  approximately 12:30am ET tonight.",
+        "pubDate": "2023-12-13T16:59:17",
+        "id": 92,
+        "fetched_at": "2023-12-13T17:52:51.920921",
+        "source": "senateppg-twitter",
+        "link": "https://twitter.com/SenatePPG/status/1734981329433894937#m"
+    },
+    {
+        "title": "The Senate is now voting on the Ernst Motion to Table the Schumer Motion to Recommit (NDAA Conference Report).",
+        "pubDate": "2023-12-12T20:12:59",
+        "id": 80,
+        "fetched_at": "2023-12-13T07:10:51.028224",
+        "source": "senateppg-twitter",
+        "link": "https://twitter.com/SenatePPG/status/1734667686246834468#m"
+    }
 ]
 ```
 #### Get Next Meeting Information
