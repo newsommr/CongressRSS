@@ -4,6 +4,7 @@ import logging
 from app.models import RSSItem, HouseInfo, SenateInfo
 from app.database import SessionLocal
 from datetime import datetime
+import pytz
 
 # Constants
 SENATE_SOURCE = "senateppg-twitter"
@@ -52,12 +53,6 @@ def update_meeting_info(db: Session, source: str, in_session: int, next_meeting 
             house_info = create_house_info(in_session, next_meeting, live_link)
             db.add(house_info)
 
-    try:
-        db.commit()
-    except SQLAlchemyError as e:
-        db.rollback()
-        logging.error(f"An error occurred in updating the upcoming meeting information for Congress: {e}")
-
 def update_senate_info(senate_info, in_session: int, next_meeting, live_link):
     """
     Updates existing SenateInfo record.
@@ -65,7 +60,7 @@ def update_senate_info(senate_info, in_session: int, next_meeting, live_link):
     senate_info.in_session = in_session
     senate_info.next_meeting = next_meeting
     senate_info.live_link = live_link
-    senate_info.last_updated = datetime.utcnow()
+    senate_info.last_updated = datetime.now(pytz.utc)
 
 
 def update_house_info(house_info, in_session: int, next_meeting, live_link):
@@ -75,16 +70,16 @@ def update_house_info(house_info, in_session: int, next_meeting, live_link):
     house_info.in_session = in_session
     house_info.next_meeting = next_meeting
     house_info.live_link = live_link
-    house_info.last_updated = datetime.utcnow()
+    house_info.last_updated = datetime.now(pytz.utc)
     
 def create_senate_info(in_session: int, next_meeting, live_link) -> SenateInfo:
     """
     Creates a new SenateInfo record.
     """
-    return SenateInfo(in_session=in_session, next_meeting=next_meeting, live_link=live_link, last_updated=datetime.utcnow())
+    return SenateInfo(in_session=in_session, next_meeting=next_meeting, live_link=live_link, last_updated=datetime.now(pytz.utc))
 
 def create_house_info(in_session: int, next_meeting, live_link) -> HouseInfo:
     """
     Creates a new HouseInfo record.
     """
-    return HouseInfo(in_session=in_session, next_meeting=next_meeting, live_link=live_link, last_updated=datetime.utcnow())
+    return HouseInfo(in_session=in_session, next_meeting=next_meeting, live_link=live_link, last_updated=datetime.now(pytz.utc))
