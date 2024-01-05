@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /feeds/
+Disallow: /feeds/
+Disallow: /endpoint1/
+Disallow: /endpoint2/
+Disallow: /endpoint3/
