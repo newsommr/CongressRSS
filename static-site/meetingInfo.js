@@ -10,7 +10,8 @@ async function fetchSessionStatus(sessionType, elementId) {
             const nextSessionDiv = document.createElement('div');
             nextSessionDiv.className = 'session-next-date';
             var pubDate = new Date(data.next_meeting);
-            const localTime = new Date(pubDate.getTime());
+            const localOffset = pubDate.getTimezoneOffset();
+            const localTime = new Date(pubDate.getTime() - localOffset * 60000);
             const localTimeString = localTime.toLocaleString('en-US', {
                 year: 'numeric',
                 month: '2-digit',
