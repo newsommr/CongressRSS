@@ -14,7 +14,8 @@
         'senateppg-twitter': 'Senate Periodical Press Gallery',
         'housedailypress-twitter': 'House Press Gallery',
         'doj-olc-opinions': 'Department of Justice, Office of Legal Counsel',
-        'gao-reports': 'Government Accountability Office'
+        'gao-reports': 'Government Accountability Office',
+        'dsca-major-arms-sales': 'Defense Security Cooperation Agency'
     };
 
     const sourceLinkMapping = { 
@@ -24,7 +25,8 @@
         'senateppg-twitter': 'https://twitter.com/senateppg',
         'housedailypress-twitter': 'https://twitter.com/housedailypress',
         'doj-olc-opinions': 'https://www.justice.gov/olc/opinions',
-        'gao-reports':  'https://www.gao.gov/reports-testimonies'
+        'gao-reports':  'https://www.gao.gov/reports-testimonies',
+        'dsca-major-arms-sales': 'https://www.dsca.mil/press-media/major-arms-sales'
     }
 
 
@@ -102,16 +104,6 @@
                 Source: <a class='item-source' href='${sourceLink}'target="_blank">${sourceName}</a></p>
             </div>
         `;
-    }
-
-    // Formats the pubdate to display to the user's local time
-    function getFormattedLocalTime(pubDate) {
-        const localTime = new Date(pubDate);
-        return localTime.toLocaleString('en-US', {
-            year: 'numeric', month: '2-digit', day: '2-digit',
-            hour: '2-digit', minute: '2-digit', second: '2-digit',
-            hour12: true, timeZoneName: 'short'
-        });
     }
 
     function toggleSortOrder() {

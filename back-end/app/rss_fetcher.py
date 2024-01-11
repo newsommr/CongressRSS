@@ -30,7 +30,8 @@ def fetch_and_store_rss():
                     ("https://nitter.x86-64-unknown-linux-gnu.zip/SenatePPG/rss", "senateppg-twitter"),
                     ("https://nitter.x86-64-unknown-linux-gnu.zip/HouseDailyPress/rss", "housedailypress-twitter"),
                     ("https://rssproxy.migor.org/api/w2f?v=0.1&url=https%3A%2F%2Fwww.justice.gov%2Folc%2Fopinions&link=.%2Farticle%5B1%5D%2Fdiv%5B1%5D%2Fh2%5B1%5D%2Fa%5B1%5D&context=%2F%2Fdiv%5B3%5D%2Fmain%5B1%5D%2Fdiv%5B2%5D%2Fdiv%5B3%5D%2Fdiv%5B1%5D%2Farticle%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B2%5D%2Fdiv%5B2%5D%2Fdiv%5B4%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B2%5D%2Fdiv&date=.%2Farticle%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B2%5D%2Fdiv%5B1%5D%2Ftime%5B1%5D&re=none&out=atom", "doj-olc-opinions"),
-                    ("https://rssproxy.migor.org/api/w2f?v=0.1&url=https%3A%2F%2Fwww.gao.gov%2Freports-testimonies&link=.%2Fdiv%5B1%5D%2Fspan%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fh4%5B1%5D%2Fa%5B1%5D&context=%2F%2Fdiv%5B1%5D%2Fdiv%5B3%5D%2Fdiv%5B4%5D%2Fmain%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B2%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fsection%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv&date=.%2Fdiv%5B1%5D%2Fspan%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fspan%5B1%5D%2Ftime%5B1%5D&re=none&out=atom", "gao-reports")
+                    ("https://rssproxy.migor.org/api/w2f?v=0.1&url=https%3A%2F%2Fwww.gao.gov%2Freports-testimonies&link=.%2Fdiv%5B1%5D%2Fspan%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fh4%5B1%5D%2Fa%5B1%5D&context=%2F%2Fdiv%5B1%5D%2Fdiv%5B3%5D%2Fdiv%5B4%5D%2Fmain%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B2%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fsection%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv&date=.%2Fdiv%5B1%5D%2Fspan%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fspan%5B1%5D%2Ftime%5B1%5D&re=none&out=atom", "gao-reports"),
+                    ("https://www.dsca.mil/press-media/major-arms-sales/feed", "dsca-major-arms-sales"),
                 ]
 
     for rss_url, source in rss_feeds:
@@ -40,7 +41,8 @@ def fetch_and_store_rss():
 
             for entry in entries:
                 item = parse_entry(entry, source)
-                create_rss_item(db, item)
+                if item is not None:
+                    create_rss_item(db, item)
 
             db.commit()
         except Exception as e:
@@ -61,6 +63,8 @@ def parse_entry(entry, source: str) -> dict:
     """
     if 'nitter' in entry.link:
         entry = handle_twitter_urls(entry)
+        if not entry:
+            return None
 
     return {
         "title": entry.title,
@@ -71,11 +75,20 @@ def parse_entry(entry, source: str) -> dict:
 
 def handle_twitter_urls(entry):
     """
-    Handles the modification of Twitter URLs in the feed entry.
+    Handles the modification of Twitter URLs in the feed entry. Returns None for retweets.
     """
+    # If the entry is a retweet (contains "RT by"), return None
+    if "RT by" in entry.title:
+        return None
+
+    # Remove 'R to @username: ' from the title if present
     entry.title = re.sub(r'^R to @\w+: ', '', entry.title)
+
+    # Modify the link to replace 'nitter' domain with 'twitter.com'
     entry.link = re.sub(r'https?://nitter\.[^/]+', 'https://twitter.com', entry.link)
+
     return entry
+
 
 
 def fetch_session_info(source: str):
