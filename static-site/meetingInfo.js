@@ -15,8 +15,8 @@ async function fetchSessionStatus(sessionType, elementId) {
 
             if (sessionType === 'senate' && data.live_link) {
                 sessionStatusText.href = data.live_link;
-            } else if (sessionType === 'house') {
-                sessionStatusText.href = "https://live.house.gov/";
+            } else if (sessionType === 'house' && data.live_link) {
+                sessionStatusText.href = data.live_link;
             }
 
             sessionStatusText.target = '_blank';
