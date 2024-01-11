@@ -4,7 +4,26 @@ async function fetchSessionStatus(sessionType, elementId) {
         const data = await response.json();
         let result = document.createElement('div');
 
-        result.textContent = `${sessionType.charAt(0).toUpperCase() + sessionType.slice(1)}: ${data.in_session === 0 ? 'Adjourned' : 'In Session'}`;
+        // Initialize textContent with session status
+        result.textContent = `${sessionType.charAt(0).toUpperCase() + sessionType.slice(1)}: `;
+
+        if (data.in_session === 1) {
+            const sessionStatusText = document.createElement('a');
+            sessionStatusText.textContent = 'In Session';
+            sessionStatusText.style.color = 'inherit';
+            sessionStatusText.style.textDecoration = 'none';
+
+            if (sessionType === 'senate' && data.live_link) {
+                sessionStatusText.href = data.live_link;
+            } else if (sessionType === 'house') {
+                sessionStatusText.href = "https://live.house.gov/";
+            }
+
+            sessionStatusText.target = '_blank';
+            result.appendChild(sessionStatusText);
+        } else {
+            result.textContent += 'Adjourned';
+        }
 
         if (data.next_meeting) {
             const nextSessionDiv = document.createElement('div');
@@ -23,16 +42,6 @@ async function fetchSessionStatus(sessionType, elementId) {
             });
             nextSessionDiv.textContent = `Meets ${localTimeString}`;
             result.appendChild(nextSessionDiv);
-        }
-
-        if (data.in_session === 1 && sessionType === 'senate' && data.live_link) {
-            const link = document.createElement('a');
-            link.href = data.live_link;
-            link.target = '_blank';
-            link.textContent = ' (Live)';
-            link.style.color = 'inherit';
-            link.style.textDecoration = 'none';
-            result.appendChild(link);
         }
 
         document.getElementById(elementId).innerHTML = '';
