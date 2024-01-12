@@ -2,7 +2,6 @@
     const API_URL = "https://congress-rss.fly.dev/items/";
     const TITLE_MAX_LENGTH = 1000;
 
-    // State Variables
     let items = [];
     let currentSortOrder = 'desc';
     let lastSearchTerm = '';
@@ -29,38 +28,47 @@
         'dsca-major-arms-sales': 'https://www.dsca.mil/press-media/major-arms-sales'
     }
 
+    function truncateString(str, maxLength) {
+        return str.length > maxLength ? `${str.substring(0, maxLength)}...` : str;
+    }
 
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleString('en-US', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true,
+            timeZoneName: 'short'
+        });
+    }
 
-    // Fetch from API with/without filtering
     async function fetchRSS(url, applySourceFilter = false) {
         try {
             const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             items = await response.json();
             applySourceFilter ? applyFilters() : displayItems();
         } catch (error) {
             console.error("Failed to fetch RSS:", error);
-            document.getElementById('rss-content').innerHTML = 'No results.';
+            document.getElementById('rss-content').textContent = 'No results.';
         }
     }
 
-    // Display items with optional sorting and filtering
     function displayItems(sortOrder = currentSortOrder, filterSources = [], searchTerm = '') {
         let filteredItems = filterAndSortItems(items, filterSources, searchTerm, sortOrder);
         renderItems(filteredItems);
     }
 
-    // Filter and sort items
     function filterAndSortItems(items, filterSources, searchTerm, sortOrder) {
-        try {
-            return items
+        return items
             .filter(item => filterSources.length === 0 || filterSources.includes(item.source))
             .sort((a, b) => (sortOrder === 'asc' ? new Date(a.pubDate) - new Date(b.pubDate) : new Date(b.pubDate) - new Date(a.pubDate)));
-        } catch (error) {
-            console.log(error)
-        }
     }
 
-    // Render items to the DOM
     function renderItems(items) {
         const listGroup = document.createElement('ul');
         listGroup.className = 'list-group';
@@ -77,31 +85,17 @@
         contentContainer.appendChild(listGroup);
     }
 
-    // Generate the HTML for each item to be displayed.
     function getItemHTML(item) {
-        const title = item.title.length > TITLE_MAX_LENGTH ? `${item.title.substring(0, TITLE_MAX_LENGTH)}...` : item.title;
-        // Modified line: Format the date and time
-        var pubDate = new Date(item.pubDate);
-        const localOffset = pubDate.getTimezoneOffset();
-        const localTime = new Date(pubDate.getTime() - localOffset * 60000);
-        const localTimeString = localTime.toLocaleString('en-US', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true,
-            timeZoneName: 'short'
-        });
+        const title = truncateString(item.title, TITLE_MAX_LENGTH);
+        const pubDate = formatDate(item.pubDate);
         const sourceName = sourceNameMapping[item.source.trim()] || item.source.trim();
         const sourceLink = sourceLinkMapping[item.source.trim()] || item.source.trim();
 
         return `
             <div class='item-text'>
-                <a href='${item.link}'target="_blank">${title}</a>
-                <p> Published: ${localTimeString}<br>
-                Source: <a class='item-source' href='${sourceLink}'target="_blank">${sourceName}</a></p>
+                <a href='${item.link}' target="_blank">${title}</a>
+                <p>Published: ${pubDate}<br>
+                Source: <a class='item-source' href='${sourceLink}' target="_blank">${sourceName}</a></p>
             </div>
         `;
     }
@@ -114,7 +108,7 @@
     function applyFilters() {
         const selectedSources = getSelectedSources();
         if (selectedSources.length === 0) {
-            document.getElementById('rss-content').innerHTML = 'No sources selected.';
+            document.getElementById('rss-content').textContent = 'No sources selected.';
             return;
         }
         displayItems(currentSortOrder, selectedSources, lastSearchTerm);
@@ -132,37 +126,39 @@
         if (lastSearchTerm !== "") {
             fetchFilteredResults();
         } else {
-            fetchRSS(`${API_URL}?limit=500`, true);
+            getAll();
         }
     }
 
     function fetchFilteredResults() {
         const selectedSources = getSelectedSources();
-        let url = `${API_URL}search/${encodeURIComponent(lastSearchTerm)}`;
-
         if (selectedSources.length === 0) return;
 
-        url += `?sources=${encodeURIComponent(selectedSources.join(','))}`;
+        let url = `${API_URL}search/?search_term=${encodeURIComponent(lastSearchTerm)}`;
+        url += `&sources=${encodeURIComponent(selectedSources.join(','))}`;
         fetchRSS(url, true);
     }
 
+    function getAll() {
+        const selectedSources = getSelectedSources();
+        if (selectedSources.length === 0) return;
 
-    // Initialization
+        let url = `${API_URL}${encodeURIComponent(selectedSources.join(','))}`;
+        fetchRSS(url, true);
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
-        fetchRSS(`${API_URL}?limit=500`, true);
-
-        // Event listener for source filter checkboxes
         document.querySelectorAll("input[name='source']").forEach(checkbox => {
             checkbox.checked = true;
-            checkbox.addEventListener('change', applyFilters);
-            checkbox.addEventListener('change', handleSearchInput);
+            checkbox.addEventListener('change', () => {
+                applyFilters();
+                handleSearchInput();
+            });
         });
 
-        // Event listener for search input
         document.getElementById('searchInput').addEventListener('keyup', handleSearchInput);
-
-        // Event listener for sort order toggle button
         document.getElementById('toggleSortButton').addEventListener('click', toggleSortOrder);
+
+        getAll();
     });
 })();
-
