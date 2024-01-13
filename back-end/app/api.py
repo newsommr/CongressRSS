@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import desc, func
+from sqlalchemy.exc import SQLAlchemyError
 from app.models import RSSItem, SenateInfo, HouseInfo
 from app.crud import get_db
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
+import logging
 
 # Constants for readability and maintainability
 CHAMBER_SENATE = "senate"
@@ -15,74 +17,48 @@ INTERNAL_SERVER_ERROR = "Internal server error"
 
 router = APIRouter()
 
-# Added docstrings for clarity
-@router.get("/items/")
-async def read_items(limit: int = 100, offset: int = 0, db: AsyncSession = Depends(get_db)):
-    """
-    Get a list of RSS items with pagination.
+def validate_pagination(limit, offset):
+    """ 
+    Validates the limit and offset for pagination
     """
     if limit <= 0 or offset < 0:
         raise HTTPException(status_code=400, detail=INVALID_LIMIT_DETAIL)
 
-    try:
-        items = db.query(RSSItem)\
-            .order_by(desc(RSSItem.pubDate))\
-            .offset(offset)\
-            .limit(limit)\
-            .all()
-        return items
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR)
-
-@router.get("/items/{source}")
-async def read_items_by_source(source: str, limit: int = 100, offset: int = 0, db: AsyncSession = Depends(get_db)):
-    """
-    Get RSS items by source with pagination.
-    """
-    if limit <= 0 or offset < 0:
-        raise HTTPException(status_code=400, detail=INVALID_LIMIT_DETAIL)
-    try:
-        items = db.query(RSSItem)\
-                  .order_by(desc(RSSItem.pubDate))\
-                  .filter(RSSItem.source == source)\
-                  .offset(offset)\
-                  .limit(limit).all()
-        if not items:
-            raise HTTPException(status_code=404, detail=ITEMS_NOT_FOUND_DETAIL)
-        return items
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR)
-
-@router.get("/items/search/{search_term}")
-async def search_items(search_term: str, sources: str = "", limit: int = None, offset: int = 0, db: AsyncSession = Depends(get_db)):
+@router.get("/items/search/")
+async def search_items(search_term: str = "", sources: str = "", limit: int = 100, offset: int = 0, db: AsyncSession = Depends(get_db)):
     """
     Search RSS items by term, with optional source filtering and pagination.
     """
-    query = db.query(RSSItem)
+    validate_pagination(limit, offset)
 
     try:
-        date_obj = datetime.strptime(search_term, "%B %d, %Y")
-        query = query.filter(func.date(RSSItem.pubDate) == date_obj.date())
-    except ValueError:
-        query = query.filter(RSSItem.title.ilike(f'%{search_term}%'))
+        query = db.query(RSSItem)
 
-    if sources:
-        source_list = sources.split(',')
-        query = query.filter(RSSItem.source.in_(source_list))
+        # Apply source filtering if sources are provided
+        if sources:
+            source_list = sources.split(',')
+            query = query.filter(RSSItem.source.in_(source_list))
 
-    query = query.order_by(desc(RSSItem.pubDate)).offset(offset)
+        # Apply search term filtering if a search term is provided
+        if search_term:
+            try:
+                # If search term is a date
+                date_obj = datetime.strptime(search_term, "%B %d, %Y")
+                query = query.filter(func.date(RSSItem.pubDate) == date_obj.date())
+            except ValueError:
+                # If search term is not a date
+                query = query.filter(RSSItem.title.ilike(f'%{search_term}%'))
 
-    if limit is not None:
-        if limit <= 0 or offset < 0:
-            raise HTTPException(status_code=400, detail=INVALID_LIMIT_DETAIL)
-        query = query.limit(limit)
+        # Pagination and ordering
+        items = query.order_by(desc(RSSItem.pubDate)).offset(offset).limit(limit).all()
 
-    items = query.all()
-
-    if not items and offset == 0:
-        raise HTTPException(status_code=404, detail=ITEMS_NOT_FOUND_DETAIL)
-    return items
-
+        # Handle case when no items are found
+        if not items and offset == 0:
+            raise HTTPException(status_code=404, detail=ITEMS_NOT_FOUND_DETAIL)
+        return items
+    except Exception as e:
+        logging.error(f"Error in search items: {e}")
+        raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR)
 
 @router.get("/info/session/{chamber}")
 async def get_congress_session_info(chamber: str, db: AsyncSession = Depends(get_db)):
@@ -92,21 +68,20 @@ async def get_congress_session_info(chamber: str, db: AsyncSession = Depends(get
     try:
         if chamber == CHAMBER_SENATE:
             result = db.query(SenateInfo).first()
-            return {
-                "in_session": result.in_session,
-                "next_meeting": result.next_meeting,
-                "live_link": result.live_link,
-                "last_updated": result.last_updated,
-            }
         elif chamber == CHAMBER_HOUSE:
             result = db.query(HouseInfo).first()
-            return {
-                "in_session": result.in_session,
-                "next_meeting": result.next_meeting,
-                "live_link": result.live_link,
-                "last_updated": result.last_updated,
-            }
         else:
             raise HTTPException(status_code=400, detail=INVALID_CHAMBER_DETAIL)
+
+        if result is None:
+            raise HTTPException(status_code=404, detail=ITEMS_NOT_FOUND_DETAIL)
+
+        return {
+            "in_session": result.in_session,
+            "next_meeting": result.next_meeting,
+            "live_link": result.live_link,
+            "last_updated": result.last_updated,
+        }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logging.error(f"Error fetching congress session info for {chamber}: {e}")
+        raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR)
