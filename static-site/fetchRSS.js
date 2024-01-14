@@ -1,5 +1,5 @@
 (function() {
-    const API_URL = "https://congress-rss.fly.dev/items/";
+    const API_URL = "https://congress-rss.fly.dev/items/search/";
     const TITLE_MAX_LENGTH = 1000;
 
     let items = [];
@@ -134,7 +134,7 @@
         const selectedSources = getSelectedSources();
         if (selectedSources.length === 0) return;
 
-        let url = `${API_URL}search/?search_term=${encodeURIComponent(lastSearchTerm)}`;
+        let url = `${API_URL}?search_term=${encodeURIComponent(lastSearchTerm)}`;
         url += `&sources=${encodeURIComponent(selectedSources.join(','))}`;
         fetchRSS(url, true);
     }
@@ -143,7 +143,7 @@
         const selectedSources = getSelectedSources();
         if (selectedSources.length === 0) return;
 
-        let url = `${API_URL}${encodeURIComponent(selectedSources.join(','))}`;
+        let url = `${API_URL}?sources=${encodeURIComponent(selectedSources.join(','))}`;
         fetchRSS(url, true);
     }
 
