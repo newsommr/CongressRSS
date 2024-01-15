@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import desc, func
 from sqlalchemy.exc import SQLAlchemyError
-from app.models import RSSItem, SenateInfo, HouseInfo
+from app.models import RSSItem, SenateInfo, HouseInfo, PresidentSchedule
 from app.crud import get_db
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -84,4 +84,24 @@ async def get_congress_session_info(chamber: str, db: AsyncSession = Depends(get
         }
     except Exception as e:
         logging.error(f"Error fetching congress session info for {chamber}: {e}")
+        raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR)
+
+@router.get("/info/president-schedule/")
+async def get_president_session_info(limit: int = 100, offset: int = 0, db: AsyncSession = Depends(get_db)):
+    """
+    Returns the President's public schedule, with optional source filtering and pagination.
+    """
+    validate_pagination(limit, offset)
+    try:
+        query = db.query(PresidentSchedule).order_by(desc(PresidentSchedule.time)).offset(offset).limit(limit)
+
+        # Execute the query
+        result = query.all()
+
+        if result is None:
+            raise HTTPException(status_code=404, detail=ITEMS_NOT_FOUND_DETAIL)
+
+        return result
+    except Exception as e:
+        logging.error(f"Error fetching the President's Schedule: {e}")
         raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR)

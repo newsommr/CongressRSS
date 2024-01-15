@@ -1,5 +1,5 @@
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import feedparser
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
@@ -8,8 +8,8 @@ import pytz
 import requests
 
 from app.contact_llm import send_prompt
-from app.models import RSSItem, HouseInfo, SenateInfo
-from app.crud import get_db, update_meeting_info, create_rss_item
+from app.models import RSSItem, HouseInfo, SenateInfo, PresidentSchedule
+from app.crud import get_db, update_meeting_info, create_rss_item, update_president_schedule
 
 # Constants for file paths
 SENATE_PROMPT_FILE = 'app/prompts/senate_prompt.txt'
@@ -89,7 +89,41 @@ def handle_twitter_urls(entry):
 
     return entry
 
+def fetch_president_schedule():
+    db = next(get_db())
+    try:
+        response = requests.get("https://media-cdn.factba.se/rss/json/calendar-full.json")
+        if response.status_code != 200:
+            return
+        items = response.json()
+        for item in items:
+            # Use the 'date' field with 12:00 AM if 'time' is missing or null
+            time_str = item.get('time') if item.get('time') is not None else '00:00:00'
 
+            date_time_str = f"{item['date']} {time_str}"
+            try:
+                date_time_obj = datetime.strptime(date_time_str, '%Y-%m-%d %H:%M:%S')
+            except ValueError as ve:
+                logging.error(f"Date parsing error for item {item}: {ve}")
+                continue
+
+            est = pytz.timezone('US/Eastern')
+            date_time_obj = est.localize(date_time_obj)
+            utc_time_obj = date_time_obj + timedelta(hours=5)
+
+            parsed_item = {
+                "location": item.get('location', ''),
+                "time": utc_time_obj,
+                "description": item.get('details', ''),
+                "press_information": item.get('coverage', '')
+            }
+            update_president_schedule(db, parsed_item)
+        db.commit()
+    except Exception as e:
+        logging.error(f"An error occurred in fetching and updating the President's schedule: {e}")
+        db.rollback()
+    finally:
+        db.close()
 
 def fetch_session_info(source: str):
     """

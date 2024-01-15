@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.database import Base, engine
 from app.api import router as api_router
-from app.rss_fetcher import fetch_and_store_rss, fetch_session_info
+from app.rss_fetcher import fetch_and_store_rss, fetch_session_info, fetch_president_schedule
 
 app = FastAPI()
 
@@ -25,6 +25,7 @@ app.include_router(api_router)
 fetch_and_store_rss();
 fetch_session_info("senateppg-twitter");
 fetch_session_info("housedailypress-twitter");
+fetch_president_schedule();
 
 # Initialize scheduler
 scheduler = AsyncIOScheduler()
@@ -33,4 +34,5 @@ scheduler = AsyncIOScheduler()
 scheduler.add_job(fetch_and_store_rss, "interval", minutes=2)
 scheduler.add_job(fetch_session_info, "interval", minutes=15, args=["senateppg-twitter"])
 scheduler.add_job(fetch_session_info, "interval", minutes=15, args=["housedailypress-twitter"])
+scheduler.add_job(fetch_president_schedule, "interval", minutes=30)
 scheduler.start()
