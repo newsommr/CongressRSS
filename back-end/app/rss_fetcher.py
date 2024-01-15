@@ -91,6 +91,8 @@ def handle_twitter_urls(entry):
 
 def fetch_president_schedule():
     db = next(get_db())
+    db.query(PresidentSchedule).delete()
+    db.commit()
     try:
         response = requests.get("https://media-cdn.factba.se/rss/json/calendar-full.json")
         if response.status_code != 200:
@@ -103,13 +105,11 @@ def fetch_president_schedule():
             date_time_str = f"{item['date']} {time_str}"
             try:
                 date_time_obj = datetime.strptime(date_time_str, '%Y-%m-%d %H:%M:%S')
+                year, month, day, hour, minute = date_time_obj.year, date_time_obj.month, date_time_obj.day, date_time_obj.hour, date_time_obj.minute
+                utc_time_obj = convert_to_utc(year, month, day, hour, minute, timezone='US/Eastern')
             except ValueError as ve:
                 logging.error(f"Date parsing error for item {item}: {ve}")
                 continue
-
-            est = pytz.timezone('US/Eastern')
-            date_time_obj = est.localize(date_time_obj)
-            utc_time_obj = date_time_obj + timedelta(hours=5)
 
             parsed_item = {
                 "location": item.get('location', ''),

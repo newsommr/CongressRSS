@@ -32,33 +32,73 @@ async def search_items(search_term: str = "", sources: str = "", limit: int = 10
     validate_pagination(limit, offset)
 
     try:
-        query = db.query(RSSItem)
+        rss_query = db.query(RSSItem)
+        president_schedule_query = db.query(PresidentSchedule)
+        potus_schedule_included = False
 
         # Apply source filtering if sources are provided
         if sources:
             source_list = sources.split(',')
-            query = query.filter(RSSItem.source.in_(source_list))
+            rss_query = rss_query.filter(RSSItem.source.in_(source_list))
+            potus_schedule_included = 'potus-schedule' in source_list
 
         # Apply search term filtering if a search term is provided
         if search_term:
             try:
                 # If search term is a date
                 date_obj = datetime.strptime(search_term, "%B %d, %Y")
-                query = query.filter(func.date(RSSItem.pubDate) == date_obj.date())
+                rss_query = rss_query.filter(func.date(RSSItem.pubDate) == date_obj.date())
+                president_schedule_query = president_schedule_query.filter(func.date(PresidentSchedule.time) == date_obj.date())
             except ValueError:
                 # If search term is not a date
-                query = query.filter(RSSItem.title.ilike(f'%{search_term}%'))
+                rss_query = rss_query.filter(RSSItem.title.ilike(f'%{search_term}%'))
 
-        # Pagination and ordering
-        items = query.order_by(desc(RSSItem.pubDate)).offset(offset).limit(limit).all()
+        # Pagination and ordering for RSS items
+        rss_items = rss_query.order_by(desc(RSSItem.pubDate)).offset(offset).limit(limit).all()
+
+        # Fetch and format president schedule if included
+        president_schedule_items = []
+        if potus_schedule_included:
+            president_schedule_items = president_schedule_query.all()
+            president_schedule_items = [format_president_schedule_item(item) for item in president_schedule_items]
+
+        # Combine and sort RSS and POTUS schedule items
+        combined_items = sorted(rss_items + president_schedule_items, key=get_pub_date, reverse=True)[:limit]
 
         # Handle case when no items are found
-        if not items and offset == 0:
+        if not combined_items and offset == 0:
             raise HTTPException(status_code=404, detail=ITEMS_NOT_FOUND_DETAIL)
-        return items
+
+        return combined_items
     except Exception as e:
         logging.error(f"Error in search items: {e}")
         raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR)
+
+def get_pub_date(item):
+    if isinstance(item, RSSItem):
+        return item.pubDate
+    elif isinstance(item, dict):
+        return item['pubDate']
+    else:
+        return None  # or some default date
+
+def format_president_schedule_item(item):
+    """
+    Format PresidentSchedule item to match RSS item structure.
+    """
+    # Construct a title and link based on PresidentSchedule's data
+    title = f"{item.description} at {item.location}"
+    link = f"https://factba.se/biden/calendar"  # Example link, adjust based on your application's URL structure
+
+    # Format item as RSSItem-like dictionary
+    formatted_item = {
+        'title': title,
+        'link': link,
+        'pubDate': item.time,
+        'source': 'potus-schedule'
+    }
+    return formatted_item
+
 
 @router.get("/info/session/{chamber}")
 async def get_congress_session_info(chamber: str, db: AsyncSession = Depends(get_db)):

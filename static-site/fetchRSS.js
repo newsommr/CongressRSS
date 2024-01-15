@@ -14,7 +14,8 @@
         'housedailypress-twitter': 'House Press Gallery',
         'doj-olc-opinions': 'Department of Justice, Office of Legal Counsel',
         'gao-reports': 'Government Accountability Office',
-        'dsca-major-arms-sales': 'Defense Security Cooperation Agency'
+        'dsca-major-arms-sales': 'Defense Security Cooperation Agency',
+        'potus-schedule': 'Factbase'
     };
 
     const sourceLinkMapping = { 
@@ -25,7 +26,8 @@
         'housedailypress-twitter': 'https://twitter.com/housedailypress',
         'doj-olc-opinions': 'https://www.justice.gov/olc/opinions',
         'gao-reports':  'https://www.gao.gov/reports-testimonies',
-        'dsca-major-arms-sales': 'https://www.dsca.mil/press-media/major-arms-sales'
+        'dsca-major-arms-sales': 'https://www.dsca.mil/press-media/major-arms-sales',
+        'potus-schedule': 'https://factba.se/biden/calendar'
     }
 
     function truncateString(str, maxLength) {
