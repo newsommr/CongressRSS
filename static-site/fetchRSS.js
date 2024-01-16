@@ -35,8 +35,10 @@
     }
 
     function formatDate(dateString) {
-        const date = new Date(dateString);
-        return date.toLocaleString('en-US', {
+        const pubDate = new Date(dateString);
+        const localOffset = pubDate.getTimezoneOffset();
+        const localTime = new Date(pubDate.getTime() - localOffset * 60000);
+        return localTime.toLocaleString('en-US', {
             year: 'numeric',
             month: '2-digit',
             day: '2-digit',
