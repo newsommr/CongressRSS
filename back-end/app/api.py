@@ -44,14 +44,21 @@ async def search_items(search_term: str = "", sources: str = "", limit: int = 10
 
         # Apply search term filtering if a search term is provided
         if search_term:
+            date_filter_applied = False
             try:
                 # If search term is a date
                 date_obj = datetime.strptime(search_term, "%B %d, %Y")
                 rss_query = rss_query.filter(func.date(RSSItem.pubDate) == date_obj.date())
                 president_schedule_query = president_schedule_query.filter(func.date(PresidentSchedule.time) == date_obj.date())
+                date_filter_applied = True
             except ValueError:
-                # If search term is not a date
+                # If search term is not a date, apply text search
                 rss_query = rss_query.filter(RSSItem.title.ilike(f'%{search_term}%'))
+                if not date_filter_applied:
+                    # Apply text search to PresidentSchedule if search term is not a date
+                    president_schedule_query = president_schedule_query.filter(
+                        PresidentSchedule.description.ilike(f'%{search_term}%')
+                    )
 
         # Pagination and ordering for RSS items
         rss_items = rss_query.order_by(desc(RSSItem.pubDate)).offset(offset).limit(limit).all()
@@ -73,6 +80,7 @@ async def search_items(search_term: str = "", sources: str = "", limit: int = 10
     except Exception as e:
         logging.error(f"Error in search items: {e}")
         raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR)
+
 
 def get_pub_date(item):
     if isinstance(item, RSSItem):
