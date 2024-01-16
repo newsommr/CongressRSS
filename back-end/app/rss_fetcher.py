@@ -112,6 +112,7 @@ def fetch_president_schedule():
                 continue
 
             parsed_item = {
+                "link": item.get('url', None),
                 "location": item.get('location', ''),
                 "time": utc_time_obj,
                 "description": item.get('details', ''),

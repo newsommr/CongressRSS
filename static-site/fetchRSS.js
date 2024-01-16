@@ -99,14 +99,18 @@
             timeOrPublished = "Time";
         }
 
+        // Check if item.link is available
+        const titleElement = item.link ? `<a href='${item.link}' target="_blank">${title}</a>` : title;
+
         return `
             <div class='item-text'>
-                <a href='${item.link}' target="_blank">${title}</a>
+                ${titleElement}
                 <p>${timeOrPublished}: ${pubDate}<br>
                 Source: <a class='item-source' href='${sourceLink}' target="_blank">${sourceName}</a></p>
             </div>
         `;
     }
+
 
     function toggleSortOrder() {
         currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';

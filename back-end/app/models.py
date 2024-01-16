@@ -7,7 +7,7 @@ class RSSItem(Base):
     __tablename__ = "rss_items"
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
-    link = Column(String, unique=True)
+    link = Column(String, default=None)
     pubDate = Column(DateTime, index=True)
     source = Column(String)
     fetched_at = Column(DateTime(timezone=True), default=lambda: datetime.now(pytz.utc))
@@ -26,8 +26,9 @@ class SenateInfo(Base):
     live_link = Column(String, default="")
     last_updated = Column(DateTime(timezone=True), default=lambda: datetime.now(pytz.utc))
 class PresidentSchedule(Base):
-    __tablename__ = 'president_schedulee'
+    __tablename__ = 'president_schedule'
     id = Column(Integer, primary_key=True, index=True)
+    link = Column(String, default=None)
     location = Column(String, default="")
     time = Column(DateTime(timezone=True), default=None)
     description = Column(String, default="")

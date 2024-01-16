@@ -98,13 +98,12 @@ def format_president_schedule_item(item):
     Format PresidentSchedule item to match RSS item structure.
     """
     # Construct a title and link based on PresidentSchedule's data
-    title = f"{item.description} at {item.location}"
-    link = f"https://factba.se/biden/calendar"  # Example link, adjust based on your application's URL structure
+    title = f"{item.description} ({item.location})"
 
     # Format item as RSSItem-like dictionary
     formatted_item = {
         'title': title,
-        'link': link,
+        'link': item.link,
         'pubDate': item.time,
         'source': 'potus-schedule'
     }

@@ -74,7 +74,7 @@ def update_president_schedule(db: Session, president_schedule: dict) -> Presiden
     """
     Adds new rss_items to the database.
     """
-    location, time, description, press_information = president_schedule['location'], president_schedule['time'], president_schedule['description'], president_schedule['press_information']
+    link, location, time, description, press_information = president_schedule['link'], president_schedule['location'], president_schedule['time'], president_schedule['description'], president_schedule['press_information']
     existing_item = db.query(PresidentSchedule).filter_by(time=time, location=location, description=description).first()
     if existing_item:
         return
@@ -94,8 +94,8 @@ def create_house_info(in_session: int, next_meeting, live_link) -> HouseInfo:
     """
     return HouseInfo(in_session=in_session, next_meeting=next_meeting, live_link=live_link, last_updated=datetime.now(pytz.utc))
 
-def create_president_schedule(location: str, time, description: str, press_information: str):
+def create_president_schedule(link, location: str, time, description: str, press_information: str):
     """
     Creates a new PresidentSchedule record.
     """
-    return PresidentSchedule(location=location, time=time, description=description, last_updated=datetime.now(pytz.utc))
+    return PresidentSchedule(link=link, location=location, time=time, description=description, last_updated=datetime.now(pytz.utc))
