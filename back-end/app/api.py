@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import desc, func
+from sqlalchemy import desc, func, or_
 from sqlalchemy.exc import SQLAlchemyError
 from app.models import RSSItem, SenateInfo, HouseInfo, PresidentSchedule
 from app.crud import get_db
@@ -57,7 +57,10 @@ async def search_items(search_term: str = "", sources: str = "", limit: int = 10
                 if not date_filter_applied:
                     # Apply text search to PresidentSchedule if search term is not a date
                     president_schedule_query = president_schedule_query.filter(
-                        PresidentSchedule.description.ilike(f'%{search_term}%')
+                        or_(
+                            PresidentSchedule.description.ilike(f'%{search_term}%'),
+                            PresidentSchedule.location.ilike(f'%{search_term}%')
+                        )
                     )
 
         # Pagination and ordering for RSS items
