@@ -94,11 +94,15 @@
         const pubDate = formatDate(item.pubDate);
         const sourceName = sourceNameMapping[item.source.trim()] || item.source.trim();
         const sourceLink = sourceLinkMapping[item.source.trim()] || item.source.trim();
+        let timeOrPublished = "Published"
+        if (sourceName == 'Factbase') {
+            timeOrPublished = "Time";
+        }
 
         return `
             <div class='item-text'>
                 <a href='${item.link}' target="_blank">${title}</a>
-                <p>Published: ${pubDate}<br>
+                <p>${timeOrPublished}: ${pubDate}<br>
                 Source: <a class='item-source' href='${sourceLink}' target="_blank">${sourceName}</a></p>
             </div>
         `;
