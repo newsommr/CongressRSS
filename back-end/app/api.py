@@ -34,7 +34,7 @@ async def search_items(search_term: str = "", sources: str = "", limit: int = 10
     try:
         rss_query = db.query(RSSItem)
         president_schedule_query = db.query(PresidentSchedule)
-        potus_schedule_included = False
+        potus_schedule_included = True
 
         # Apply source filtering if sources are provided
         if sources:
