@@ -1,6 +1,7 @@
 (function() {
     const API_URL = "https://congress-rss.fly.dev/items/search/";
     const TITLE_MAX_LENGTH = 1000;
+    const INDEX_PAGE_NAME = "index.html";
 
     let items = [];
     let currentSortOrder = 'desc';
@@ -119,7 +120,7 @@
 
     function applyFilters() {
         const selectedSources = getSelectedSources();
-        if (selectedSources.length === 0) {
+        if (selectedSources.length === 0 && getPage() != INDEX_PAGE_NAME) {
             document.getElementById('rss-content').textContent = 'No sources selected.';
             return;
         }
@@ -133,30 +134,28 @@
 
     function handleSearchInput() {
         const searchTerm = document.getElementById('searchInput').value;
-        lastSearchTerm = searchTerm;
-
-        if (lastSearchTerm !== "") {
+        if (searchTerm !== lastSearchTerm) {
+            lastSearchTerm = searchTerm;
             fetchFilteredResults();
-        } else {
-            getAll();
         }
     }
 
     function fetchFilteredResults() {
-        const selectedSources = getSelectedSources();
-        if (selectedSources.length === 0) return;
-
         let url = `${API_URL}?search_term=${encodeURIComponent(lastSearchTerm)}`;
-        url += `&sources=${encodeURIComponent(selectedSources.join(','))}`;
+        if (getPage() != INDEX_PAGE_NAME) {
+            const selectedSources = getSelectedSources();
+            if (selectedSources.length === 0) return;
+            url += `&sources=${encodeURIComponent(selectedSources.join(','))}`;
+
+        }
+        console.log(getPage());
         fetchRSS(url, true);
     }
 
-    function getAll() {
-        const selectedSources = getSelectedSources();
-        if (selectedSources.length === 0) return;
-
-        let url = `${API_URL}?sources=${encodeURIComponent(selectedSources.join(','))}`;
-        fetchRSS(url, true);
+    function getPage() {
+        const pathName = window.location.pathname;
+        const pageName = pathName.substring(pathName.lastIndexOf("/") + 1);
+        return pageName;
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -171,6 +170,6 @@
         document.getElementById('searchInput').addEventListener('keyup', handleSearchInput);
         document.getElementById('toggleSortButton').addEventListener('click', toggleSortOrder);
 
-        getAll();
+        fetchFilteredResults();
     });
 })();
