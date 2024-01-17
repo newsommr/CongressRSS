@@ -1,7 +1,7 @@
 (function() {
     const API_URL = "https://congress-rss.fly.dev/items/search/";
     const TITLE_MAX_LENGTH = 1000;
-    const INDEX_PAGE_NAME = "index.html";
+    const INDEX_PAGE_NAME = "mainPage";
 
     let items = [];
     let currentSortOrder = 'desc';
@@ -153,9 +153,7 @@
     }
 
     function getPage() {
-        const pathName = window.location.pathname;
-        const pageName = pathName.substring(pathName.lastIndexOf("/") + 1);
-        return pageName;
+        return document.body.id;
     }
 
     document.addEventListener('DOMContentLoaded', () => {
