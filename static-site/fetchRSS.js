@@ -141,7 +141,7 @@
     }
 
     function fetchFilteredResults() {
-        let url = `${API_URL}?search_term=${encodeURIComponent(lastSearchTerm)}&limit=2000`;
+        let url = `${API_URL}?search_term=${encodeURIComponent(lastSearchTerm)}`;
         if (getPage() != INDEX_PAGE_NAME) {
             const selectedSources = getSelectedSources();
             if (selectedSources.length === 0) return;
