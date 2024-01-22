@@ -97,8 +97,11 @@ def format_president_schedule_item(item):
     """
     Format PresidentSchedule item to match RSS item structure.
     """
-    # Construct a title and link based on PresidentSchedule's data
-    title = f"{item.description} ({item.location})"
+    # Construct a title based on PresidentSchedule's data. Include location only if it's not None
+    if item.location:
+        title = f"{item.description} ({item.location})"
+    else:
+        title = item.description
 
     # Format item as RSSItem-like dictionary
     formatted_item = {
@@ -108,6 +111,7 @@ def format_president_schedule_item(item):
         'source': 'potus-schedule'
     }
     return formatted_item
+
 
 
 @router.get("/info/session/{chamber}")
