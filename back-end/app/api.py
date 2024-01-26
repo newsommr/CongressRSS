@@ -27,7 +27,7 @@ def validate_pagination(limit, offset):
 @router.get("/items/search/")
 async def search_items(search_term: str = "", sources: str = "", limit: int = 100, offset: int = 0, db: AsyncSession = Depends(get_db)):
     """
-    Search RSS items by term, with optional source filtering and pagination.
+    Search RSS items by term, with optional source filtering.
     """
     validate_pagination(limit, offset)
 
@@ -55,7 +55,6 @@ async def search_items(search_term: str = "", sources: str = "", limit: int = 10
                 # If search term is not a date, apply text search
                 rss_query = rss_query.filter(RSSItem.title.ilike(f'%{search_term}%'))
                 if not date_filter_applied:
-                    # Apply text search to PresidentSchedule if search term is not a date
                     president_schedule_query = president_schedule_query.filter(
                         or_(
                             PresidentSchedule.description.ilike(f'%{search_term}%'),
@@ -63,23 +62,22 @@ async def search_items(search_term: str = "", sources: str = "", limit: int = 10
                         )
                     )
 
-        # Pagination and ordering for RSS items
-        rss_items = rss_query.order_by(desc(RSSItem.pubDate)).offset(offset).limit(limit).all()
-
-        # Fetch and format president schedule if included
+        # Fetch RSS items and POTUS schedule items without pagination
+        rss_items = rss_query.order_by(desc(RSSItem.pubDate)).all()
         president_schedule_items = []
         if potus_schedule_included:
             president_schedule_items = president_schedule_query.all()
             president_schedule_items = [format_president_schedule_item(item) for item in president_schedule_items]
 
-        # Combine and sort RSS and POTUS schedule items
-        combined_items = sorted(rss_items + president_schedule_items, key=get_pub_date, reverse=True)[:limit]
+        # Combine, sort, and then apply pagination to the combined list
+        combined_items = sorted(rss_items + president_schedule_items, key=get_pub_date, reverse=True)
+        paginated_combined_items = combined_items[offset:offset + limit]
 
         # Handle case when no items are found
-        if not combined_items and offset == 0:
+        if not paginated_combined_items and offset == 0:
             raise HTTPException(status_code=404, detail=ITEMS_NOT_FOUND_DETAIL)
 
-        return combined_items
+        return paginated_combined_items
     except Exception as e:
         logging.error(f"Error in search items: {e}")
         raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR)
