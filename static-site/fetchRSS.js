@@ -141,16 +141,19 @@
     }
 
     function fetchFilteredResults() {
+        const selectedSources = getSelectedSources();
+        if (selectedSources.length === 0 && getPage() != INDEX_PAGE_NAME) {
+            document.getElementById('rss-content').textContent = 'No sources selected.';
+            return;
+        }
+    
         let url = `${API_URL}?search_term=${encodeURIComponent(lastSearchTerm)}`;
         if (getPage() != INDEX_PAGE_NAME) {
-            const selectedSources = getSelectedSources();
-            if (selectedSources.length === 0) return;
             url += `&sources=${encodeURIComponent(selectedSources.join(','))}`;
-
         }
-        console.log(getPage());
         fetchRSS(url, true);
     }
+    
 
     function getPage() {
         return document.body.id;
@@ -160,14 +163,49 @@
         document.querySelectorAll("input[name='source']").forEach(checkbox => {
             checkbox.checked = true;
             checkbox.addEventListener('change', () => {
-                applyFilters();
-                handleSearchInput();
+                fetchFilteredResults();
             });
         });
+        
 
         document.getElementById('searchInput').addEventListener('keyup', handleSearchInput);
         document.getElementById('toggleSortButton').addEventListener('click', toggleSortOrder);
 
+        window.addEventListener('scroll', handleInfiniteScroll);
         fetchFilteredResults();
     });
+
+    function handleInfiniteScroll() {
+        const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+        const scrolled = window.scrollY;
+        const threshold = 100; // How close to the page bottom before loading more items
+
+        if (scrollable - scrolled <= threshold) {
+            // Avoid multiple requests
+            window.removeEventListener('scroll', handleInfiniteScroll);
+
+            loadMoreItems();
+        }
+    }
+
+    async function loadMoreItems() {
+        const offset = items.length; // Assuming 'items' array holds the currently displayed items
+        let url = `${API_URL}?search_term=${encodeURIComponent(lastSearchTerm)}&offset=${offset}`;
+
+        const selectedSources = getSelectedSources();
+        if (selectedSources.length > 0 && getPage() != INDEX_PAGE_NAME) {
+            url += `&sources=${encodeURIComponent(selectedSources.join(','))}`;
+        }
+
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            const newItems = await response.json();
+            items = items.concat(newItems); // Append new items to the existing list
+            displayItems(currentSortOrder, selectedSources, lastSearchTerm);
+            window.addEventListener('scroll', handleInfiniteScroll); // Re-attach scroll event listener
+        } catch (error) {
+            console.error("Failed to fetch more RSS items:", error);
+        }
+    }
 })();
