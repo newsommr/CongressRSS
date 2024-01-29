@@ -36,20 +36,37 @@
     }
 
     function formatDate(dateString) {
-        const pubDate = new Date(dateString);
-        const localOffset = pubDate.getTimezoneOffset();
-        const localTime = new Date(pubDate.getTime() - localOffset * 60000);
-        return localTime.toLocaleString('en-US', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true,
-            timeZoneName: 'short'
-        });
+    const pubDate = new Date(dateString);
+    const now = new Date();
+    const localOffset = pubDate.getTimezoneOffset();
+    const localTime = new Date(pubDate.getTime() - localOffset * 60000);
+    const diffMs = now - localTime; // Difference in milliseconds
+
+    let relativeTime = '';
+    if (Math.abs(diffMs) < 24 * 60 * 60 * 1000) { // Within 24 hours
+        if (Math.abs(diffMs) < 60 * 60 * 1000) { // Less than an hour
+            const minutes = Math.floor(Math.abs(diffMs) / (60 * 1000));
+            const minuteText = minutes === 1 ? 'minute' : 'minutes';
+            relativeTime = ` (${minutes} ${minuteText} ${diffMs > 0 ? 'ago' : 'from now'})`;
+        } else {
+            const hours = Math.floor(Math.abs(diffMs) / (60 * 60 * 1000));
+            const hourText = hours === 1 ? 'hour' : 'hours';
+            relativeTime = ` (${hours} ${hourText} ${diffMs > 0 ? 'ago' : 'from now'})`;
+        }
     }
+
+    return localTime.toLocaleString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,
+        timeZoneName: 'short'
+    }) + relativeTime;
+}
+
 
     async function fetchRSS(url, applySourceFilter = false) {
         try {
