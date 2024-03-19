@@ -1,6 +1,5 @@
 (function() {
     const API_URL = "https://congress-rss.fly.dev/items/search/";
-    const TITLE_MAX_LENGTH = 1000;
     const INDEX_PAGE_NAME = "mainPage";
 
     let items = [];
@@ -32,8 +31,15 @@
     }
 
     function truncateString(str, maxLength) {
-        return str.length > maxLength ? `${str.substring(0, maxLength)}...` : str;
-    }
+        if (str.length <= maxLength) {
+            return str;
+        }
+        // Find the last space before maxLength to avoid cutting off words
+        let trimmedString = str.substr(0, maxLength);
+        trimmedString = trimmedString.substr(0, Math.min(trimmedString.length, trimmedString.lastIndexOf(" ")));
+        return `${trimmedString}...`;
+        }
+
 
     function formatDate(dateString) {
     const pubDate = new Date(dateString);
@@ -108,7 +114,11 @@
     }
 
     function getItemHTML(item) {
-        const title = truncateString(item.title, TITLE_MAX_LENGTH);
+        // Determine the maximum length based on the item's source
+        const maxLength = (item.source.trim() === 'gao-reports' || item.source.trim() === 'doj-olc-opinions') ? 97 : 1000;
+        // Truncate the title once, using the determined maximum length
+        const title = truncateString(item.title, maxLength);
+
         const pubDate = formatDate(item.pubDate);
         const sourceName = sourceNameMapping[item.source.trim()] || item.source.trim();
         const sourceLink = sourceLinkMapping[item.source.trim()] || item.source.trim();
@@ -128,6 +138,7 @@
             </div>
         `;
     }
+
 
 
     function toggleSortOrder() {
