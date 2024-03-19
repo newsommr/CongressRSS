@@ -1,1 +1,5 @@
-Review the provided text, which includes the 15 most recent tweets from the House Press Gallery. Identify the next scheduled session after {current_date}, taking into account any pro forma sessions. Respond solely with the date and time of the next session in the ISO 8601 format 'YYYY-MM-DDTHH:MM:SS-05:00'. If the text lacks this information, reply with only the word: 'Unknown'. Your response must strictly follow this format and rely exclusively on the information given.
+Examine only the 15 most recent tweets from the House Press Gallery for the specific purpose of determining the next scheduled session date and time after {current_date}, including pro forma sessions. Your response should strictly adhere to the following format:
+
+If the information is available, respond with the date and time using the ISO 8601 format 'YYYY-MM-DDTHH:MM:SS-05:00'.
+If the information is not found, reply with 'Unknown'.
+You are instructed to exclude any and all other content from your response. This includes, but is not limited to, explanations, interpretations, or any additional context about the data or your search process. Your compliance with these instructions is imperative.
