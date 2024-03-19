@@ -22,12 +22,12 @@ def create_rss_item(db: Session, rss_item: dict) -> RSSItem:
     Adds new rss_items to the database.
     """
     title, link = rss_item['title'], rss_item['link']
-    existing_item = db.query(RSSItem).filter_by(title=title, link=link).first()
+    existing_item = db.query(RSSItem).filter_by(link=link).first()
     if existing_item:
         return
-
     new_item = RSSItem(**rss_item, fetched_at=datetime.now(pytz.utc))
     db.add(new_item)
+
 
 def update_meeting_info(db: Session, source: str, in_session: int, next_meeting = None, live_link: str = None):
     """
