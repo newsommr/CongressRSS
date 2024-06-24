@@ -21,8 +21,9 @@ def create_rss_item(db: Session, rss_item: dict) -> RSSItem:
     """
     Adds new rss_items to the database.
     """
-    title, link = rss_item['title'], rss_item['link']
-    existing_item = db.query(RSSItem).filter_by(link=link).first()
+    
+    title, pubDate = rss_item['title'], rss_item['pubDate']
+    existing_item = db.query(RSSItem).filter_by(title=title, pubDate=pubDate).first()
     if existing_item:
         return
     new_item = RSSItem(**rss_item, fetched_at=datetime.now(pytz.utc))
