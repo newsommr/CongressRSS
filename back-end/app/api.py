@@ -157,3 +157,10 @@ async def get_president_session_info(limit: int = 100, offset: int = 0, db: Asyn
     except Exception as e:
         logging.error(f"Error fetching the President's Schedule: {e}")
         raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR)
+
+def format_response(status, data, message):
+    return {
+        "status": status,
+        "data": data,
+        "message": message
+    }
