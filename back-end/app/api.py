@@ -76,7 +76,7 @@ async def retrieve_feed(
             {
                 "title": item.title,
                 "link": item.link,
-                "pubDate": item.time,
+                "pubDate": item.pubDate,
                 "source": item.source,
                 "fetched_at": item.fetched_at,
             }
