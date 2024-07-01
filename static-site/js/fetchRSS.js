@@ -80,11 +80,10 @@
           if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
           const jsonData = await response.json();
-          if (jsonData.status !== 'success') throw new Error(`Failed to fetch session status: ${jsonData.message}`);
+          if (jsonData.status !== 'success') throw new Error(jsonData.message);
           items = jsonData.data;
           applySourceFilter ? applyFilters() : displayItems(items);
         } catch (error) {
-          console.error("Failed to fetch RSS:", error);
           document.getElementById('rss-content').textContent = 'No results.';
         }
       }      
@@ -232,12 +231,13 @@
             const response = await fetch(url);
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             const jsonData = await response.json()
+            if (jsonData.status !== 'success') throw new Error(`Failed to fetch items: ${jsonData.message}`);
             newItems = jsonData.data;
             items = items.concat(newItems); // Append new items to the existing list
             displayItems(currentSortOrder, selectedSources, lastSearchTerm);
             window.addEventListener('scroll', handleInfiniteScroll); // Re-attach scroll event listener
         } catch (error) {
-            console.error("Failed to fetch more RSS items:", error);
+            console.error(error);
         }
     }
 })();
