@@ -97,10 +97,11 @@ async def retrieve_feed(
         combined_items = sorted(
             rss_items + president_schedule_items, key=get_pub_date, reverse=True
         )
+        paginated_combined_items = combined_items[:limit]
 
         if combined_items:
             status = "success"
-            data = combined_items
+            data = paginated_combined_items
         else:
             message = ITEMS_NOT_FOUND
     else:
