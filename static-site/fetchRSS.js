@@ -1,5 +1,5 @@
 (function() {
-    const API_URL = "https://congress-rss.fly.dev/items/search/";
+    const API_URL = "https://congress-rss.fly.dev/feed";
     const INDEX_PAGE_NAME = "mainPage";
 
     let items = [];
@@ -18,14 +18,14 @@
         'potus-schedule': 'Factbase'
     };
 
-    const sourceLinkMapping = { 
+    const sourceLinkMapping = {
         'white-house-legislation': "https://www.whitehouse.gov/briefing-room/legislation/",
         'white-house-presidential-actions': 'https://www.whitehouse.gov/briefing-room/presidential-actions/',
         'house-rules-committee': 'https://rules.house.gov/legislation',
         'senateppg-twitter': 'https://twitter.com/senateppg',
         'housedailypress-twitter': 'https://twitter.com/housedailypress',
         'doj-olc-opinions': 'https://www.justice.gov/olc/opinions',
-        'gao-reports':  'https://www.gao.gov/reports-testimonies',
+        'gao-reports': 'https://www.gao.gov/reports-testimonies',
         'dsca-major-arms-sales': 'https://www.dsca.mil/press-media/major-arms-sales',
         'potus-schedule': 'https://factba.se/biden/calendar'
     }
@@ -38,53 +38,56 @@
         let trimmedString = str.substr(0, maxLength);
         trimmedString = trimmedString.substr(0, Math.min(trimmedString.length, trimmedString.lastIndexOf(" ")));
         return `${trimmedString}...`;
-        }
+    }
 
 
     function formatDate(dateString) {
-    const pubDate = new Date(dateString);
-    const now = new Date();
-    const localOffset = pubDate.getTimezoneOffset();
-    const localTime = new Date(pubDate.getTime() - localOffset * 60000);
-    const diffMs = now - localTime; // Difference in milliseconds
+        const pubDate = new Date(dateString);
+        const now = new Date();
+        const localOffset = pubDate.getTimezoneOffset();
+        const localTime = new Date(pubDate.getTime() - localOffset * 60000);
+        const diffMs = now - localTime; // Difference in milliseconds
 
-    let relativeTime = '';
-    if (Math.abs(diffMs) < 24 * 60 * 60 * 1000) { // Within 24 hours
-        if (Math.abs(diffMs) < 60 * 60 * 1000) { // Less than an hour
-            const minutes = Math.floor(Math.abs(diffMs) / (60 * 1000));
-            const minuteText = minutes === 1 ? 'minute' : 'minutes';
-            relativeTime = ` (${minutes} ${minuteText} ${diffMs > 0 ? 'ago' : 'from now'})`;
-        } else {
-            const hours = Math.floor(Math.abs(diffMs) / (60 * 60 * 1000));
-            const hourText = hours === 1 ? 'hour' : 'hours';
-            relativeTime = ` (${hours} ${hourText} ${diffMs > 0 ? 'ago' : 'from now'})`;
+        let relativeTime = '';
+        if (Math.abs(diffMs) < 24 * 60 * 60 * 1000) { // Within 24 hours
+            if (Math.abs(diffMs) < 60 * 60 * 1000) { // Less than an hour
+                const minutes = Math.floor(Math.abs(diffMs) / (60 * 1000));
+                const minuteText = minutes === 1 ? 'minute' : 'minutes';
+                relativeTime = ` (${minutes} ${minuteText} ${diffMs > 0 ? 'ago' : 'from now'})`;
+            } else {
+                const hours = Math.floor(Math.abs(diffMs) / (60 * 60 * 1000));
+                const hourText = hours === 1 ? 'hour' : 'hours';
+                relativeTime = ` (${hours} ${hourText} ${diffMs > 0 ? 'ago' : 'from now'})`;
+            }
         }
-    }
 
-    return localTime.toLocaleString('en-US', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: true,
-        timeZoneName: 'short'
-    }) + relativeTime;
-}
+        return localTime.toLocaleString('en-US', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true,
+            timeZoneName: 'short'
+        }) + relativeTime;
+    }
 
 
     async function fetchRSS(url, applySourceFilter = false) {
         try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-            items = await response.json();
-            applySourceFilter ? applyFilters() : displayItems();
+          const response = await fetch(url);
+          if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
+          const jsonData = await response.json();
+          if (jsonData.status !== 'success') throw new Error(`Failed to fetch session status: ${jsonData.message}`);
+          const items = jsonData.data;
+          applySourceFilter ? applyFilters() : displayItems(items);
         } catch (error) {
-            console.error("Failed to fetch RSS:", error);
-            document.getElementById('rss-content').textContent = 'No results.';
+          console.error("Failed to fetch RSS:", error);
+          document.getElementById('rss-content').textContent = 'No results.';
         }
-    }
+      }      
 
     function displayItems(sortOrder = currentSortOrder, filterSources = [], searchTerm = '') {
         let filteredItems = filterAndSortItems(items, filterSources, searchTerm, sortOrder);
@@ -174,14 +177,14 @@
             document.getElementById('rss-content').textContent = 'No sources selected.';
             return;
         }
-    
+
         let url = `${API_URL}?search_term=${encodeURIComponent(lastSearchTerm)}`;
         if (getPage() != INDEX_PAGE_NAME) {
             url += `&sources=${encodeURIComponent(selectedSources.join(','))}`;
         }
         fetchRSS(url, true);
     }
-    
+
 
     function getPage() {
         return document.body.id;
@@ -194,7 +197,7 @@
                 fetchFilteredResults();
             });
         });
-        
+
 
         document.getElementById('searchInput').addEventListener('keyup', handleSearchInput);
         document.getElementById('toggleSortButton').addEventListener('click', toggleSortOrder);
