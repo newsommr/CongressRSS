@@ -231,7 +231,8 @@
         try {
             const response = await fetch(url);
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-            const newItems = await response.json();
+            const jsonData = await response.json()
+            newItems = jsonData.data;
             items = items.concat(newItems); // Append new items to the existing list
             displayItems(currentSortOrder, selectedSources, lastSearchTerm);
             window.addEventListener('scroll', handleInfiniteScroll); // Re-attach scroll event listener
