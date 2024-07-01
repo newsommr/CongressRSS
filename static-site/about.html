@@ -1,12 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>CongressRSS</title>
-    <link href="styles/bootstrap.min4.6.2.css" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="styles/style.css">
-</head>
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+      <!-- HTML Meta Tags -->
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>CongressRSS</title>
+      <meta name="description" content="Your central resource for U.S. government actions.">
+      <meta name="keywords" content="Congress, legislation, government, United States, House of Representatives, Senate, legislative updates, government reports, signed bills, U.S. Congress sessions">
+  
+      <!-- Facebook Meta Tags -->
+      <meta property="og:url" content="https://congress.cipherkeeper.dev">
+      <meta property="og:type" content="website">
+      <meta property="og:title" content="CongressRSS">
+      <meta property="og:description" content="Your central resource for U.S. government actions.">
+      <meta property="og:image" content="images/og-image.webp">
+  
+      <!-- Twitter Meta Tags -->
+      <meta name="twitter:card" content="summary_large_image">
+      <meta property="twitter:domain" content="congress.cipherkeeper.dev">
+      <meta property="twitter:url" content="https://congress.cipherkeeper.dev">
+      <meta name="twitter:title" content="CongressRSS">
+      <meta name="twitter:description" content="Your central resource for U.S. government actions.">
+      <meta name="twitter:image" content="images/og-image.webp">
+  
+      <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+      <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
+      <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
+      <link rel="manifest" href="site.webmanifest">
+      <link href="styles/bootstrap.min4.6.2.css" rel="stylesheet">
+      <link rel="stylesheet" type="text/css" href="styles/style.css">
+  </head>
 <body>
   <div id="navbar">
   </div>
@@ -74,15 +99,15 @@
 
     <h4>Fetch All RSSItems</h4>
     <ul>
-        <li><strong>Endpoint:</strong> <code>GET /items/</code></li>
-        <li><strong>Description:</strong> Fetches all items in the <code>RSSItem</code> table.</li>
+        <li><strong>Endpoint:</strong> <code>GET /feed</code></li>
+        <li><strong>Description:</strong> Fetches all items in the feed</li>
         <li><strong>Parameters:</strong>
             <ul>
                 <li><code>limit</code>: Limit the number of items (default is 100).</li>
                 <li><code>offset</code>: Pagination offset (default is 0).</li>
             </ul>
         </li>
-        <li><strong>Example Request:</strong> <a href="https://congress-rss.fly.dev/items/?limit=3&offset=300">https://congress-rss.fly.dev/items/?limit=3&offset=300</a></li>
+        <li><strong>Example Request:</strong> <a href="https://congress-rss.fly.dev/feed?limit=3">https://congress-rss.fly.dev/feed?limit=3</a></li>
         <li><strong>Example Response:</strong>
             <pre>
 [
@@ -117,8 +142,8 @@
 
     <h4>Fetch All RSSItems by Source</h4>
     <ul>
-        <li><strong>Endpoint:</strong> <code>GET /items/{source}</code></li>
-        <li><strong>Description:</strong> Fetches all items in the <code>RSSItem</code> table from a specific source.</li>
+        <li><strong>Endpoint:</strong> <code>GET /feed?sources=</code></li>
+        <li><strong>Description:</strong> Fetches all items in the feed from a specific sources.</li>
         <li><strong>Parameters:</strong>
             <ul>
                 <li><code>limit</code>: Limit the number of items (default is 100).</li>
