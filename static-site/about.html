@@ -38,7 +38,7 @@
                         <li><code>crud.py</code>: Makes changes to the database on behalf of the rest of the application.</li>
                         <li><code>main.py</code>: Handles starting up the FastAPI routes and scheduling update functions.</li>
                         <li><code>rss_fetcher.py</code>: Contains the logic for making requests to the feeds and updating the database if needed.</li>
-                        <li><code>contact_llm.py</code>: Not currently used, but will handle requests to a Mixtral-8x7B model for identifying Congressional schedules.</li>
+                        <li><code>contact_llm.py</code>: Sends requests to a Mixtral-8x7B model for identifying Congressional schedules.</li>
                     </ul>
                 </li>
             </ul>
@@ -125,70 +125,88 @@
                 <li><code>offset</code>: Pagination offset (default is 0).</li>
             </ul>
         </li>
-        <li><strong>Example Request:</strong> <a href="https://congress-rss.fly.dev/items/senateppg-twitter?limit=2">https://congress-rss.fly.dev/items/senateppg-twitter?limit=2</a></li>
+        <li><strong>Example Request:</strong> <a href="https://congress-rss.fly.dev/feed?sources=senateppg-twitter&limit=1">https://congress-rss.fly.dev/feed?sources=senateppg-twitter&limit=1</a></li>
         <li><strong>Example Response:</strong>
             <pre>
-[
-  {
-    "id": 333,
-    "link": "https://twitter.com/SenatePPG/status/1740758987489046694#m",
-    "source": "senateppg-twitter",
-    "pubDate": "2023-12-29T15:37:39",
-    "title": "Senator Murphy (D-CT) presided today and no business was conducted.",
-    "fetched_at": "2023-12-29T15:41:37.935018"
-  },
-  {
-    "id": 327,
-    "link": "https://twitter.com/SenatePPG/status/1740715555831845261#m",
-    "source": "senateppg-twitter",
-    "pubDate": "2023-12-29T12:45:04",
-    "title": "The Second Session of the 118th Congress will convene on Wednesday, January 3, 2024 at 12 noon for a pro forma session only, with no business conducted.",
-    "fetched_at": "2023-12-29T12:53:37.570786"
-  }
-]</pre>
+              {
+                "status": "success",
+                "data": [
+                  {
+                    "title": "Senator Cardin (D-MD) presided today.",
+                    "link": "https://twitter.com/SenatePPG/status/1806719377380704478#m",
+                    "pubDate": "2024-06-28T16:00:41",
+                    "source": "senateppg-twitter",
+                    "fetched_at": "2024-06-28T16:08:27.688470"
+                  }
+                ],
+                "message": null
+              }
+</pre>
         </li>
     </ul>
 
     <h4>Search through all RSSItems</h4>
     <ul>
-        <li><strong>Endpoint:</strong> <code>GET /items/search/{search_term}</code></li>
-        <li><strong>Description:</strong> Searches all items in the <code>RSSItem</code> table based on the title attribute.</li>
+        <li><strong>Endpoint:</strong> <code>GET /feed?search_term=</code></li>
+        <li><strong>Description:</strong> Searches all items based on the title attribute.</li>
         <li><strong>Parameters:</strong>
             <ul>
                 <li><code>limit</code>: Limit the number of items (default is 100).</li>
                 <li><code>offset</code>: Pagination offset (default is 0).</li>
             </ul>
         </li>
-        <li><strong>Example Request:</strong> <a href="https://congress-rss.fly.dev/items/senateppg-twitter?limit=1">https://congress-rss.fly.dev/items/senateppg-twitter?limit=1</a></li>
+        <li><strong>Example Request:</strong> <a href="https://congress-rss.fly.dev/feed?search_term=Camp%20David&limit=2">https://congress-rss.fly.dev/feed?search_term=Camp%20David&limit=2</a></li>
         <li><strong>Example Response:</strong>
             <pre>
-[
-  {
-    "id": 95,
-    "link": "https://twitter.com/SenatePPG/status/1735023156622942355#m",
-    "source": "senateppg-twitter",
-    "pubDate": "2023-12-13T19:45:30",
-    "title": "Vote update: 2 votes at 5pm today. 1. Motion to waive Paul point of order with respect to the conference report to accompany H.R.2670, the #NDAA 2. Adoption of the conference report to accompany H.R.2670, the #NDAA",
-    "fetched_at": "2023-12-13T19:46:31.957313"
-  }
-]
+              {
+                "status": "success",
+                "data": [
+                  {
+                    "title": "The President and The First Lady arrive at Camp David (Camp David)",
+                    "link": null,
+                    "pubDate": "2024-06-30T02:10:00",
+                    "source": "potus-schedule"
+                  },
+                  {
+                    "title": "The President and The First Lady depart Hagerstown, Maryland en route to Camp David (Hagerstown Regional Airport)",
+                    "link": null,
+                    "pubDate": "2024-06-30T02:00:00",
+                    "source": "potus-schedule"
+                  }
+                ],
+                "message": null
+              }
 </pre>
         </li>
     </ul>
 
     <h4>Get Next Meeting Information</h4>
     <ul>
-        <li><strong>Endpoint:</strong> <code>GET /info/session/{chamber}</code></li>
-        <li><strong>Description:</strong> Gets the next meeting information for the House or Senate based on the specified chamber parameter.</li>
-        <li><strong>Example Request:</strong> <a href="https://congress-rss.fly.dev/info/session/senate">https://congress-rss.fly.dev/info/session/senate</a></li>
+        <li><strong>Endpoint:</strong> <code>GET /legislative/session-info</code></li>
+        <li><strong>Description:</strong> Gets the next meeting information for the House and Senate</li>
+        <li><strong>Example Request:</strong> <a href="https://congress-rss.fly.dev/legislative/session-info">https://congress-rss.fly.dev/legislative/session-info</a></li>
         <li><strong>Example Response:</strong>
             <pre>
-{
-  "in_session": 0,
-  "next_meeting": "2024-01-02 16:45:00+00:00",
-  "live_link": "https://www.senate.gov/isvp/stv.html?type=live&comm=stv&filename=stv010224",
-  "last_updated": "2024-01-01T04:22:36.559394"
-}
+              {
+                "status": "success",
+                "data": [
+                  {
+                    "chamber": "senate",
+                    "in_session": 0,
+                    "next_meeting": "2024-07-02T16:00:00",
+                    "live_link": "https://www.senate.gov/isvp/stv.html?type=live&comm=stv&filename=stv070224",
+                    "last_updated": "2024-07-01T03:45:16.391670"
+                  },
+                  {
+                    "chamber": "house",
+                    "in_session": 0,
+                    "next_meeting": "2024-07-02T15:00:00",
+                    "live_link": "https://live.house.gov",
+                    "last_updated": "2024-07-01T03:45:17.056047"
+                  }
+                ],
+                "message": null
+              }
 </pre>
         </li>
     </ul>
