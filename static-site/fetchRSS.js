@@ -81,7 +81,7 @@
 
           const jsonData = await response.json();
           if (jsonData.status !== 'success') throw new Error(`Failed to fetch session status: ${jsonData.message}`);
-          const items = jsonData.data;
+          items = jsonData.data;
           applySourceFilter ? applyFilters() : displayItems(items);
         } catch (error) {
           console.error("Failed to fetch RSS:", error);
