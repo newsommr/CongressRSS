@@ -134,6 +134,7 @@ def format_president_schedule_item(item):
         "link": item.link,
         "pubDate": item.time,
         "source": "potus-schedule",
+        "updated_at": item.updated_at
     }
     return formatted_item
 
