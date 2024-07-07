@@ -8,7 +8,6 @@ from app.rss_fetcher import (
     fetch_session_info,
     fetch_president_schedule,
 )
-import logging
 
 
 app = FastAPI()
