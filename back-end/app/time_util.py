@@ -12,6 +12,5 @@ def convert_to_utc(date, timezone):
         logging.error(f"Error attempting to convert {date} to UTC with the {timezone} timezone.")
         return None
 
-def current_time() {
+def current_time():
     return datetime.now(pytz.utc)
-}
