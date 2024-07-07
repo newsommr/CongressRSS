@@ -78,7 +78,7 @@ async def retrieve_feed(
                 "link": item.link,
                 "pubDate": item.pubDate,
                 "source": item.source,
-                "modified_at": item.modified_at,
+                "updated_at": item.updated_at,
             }
             for item in rss_items
         ]
@@ -158,14 +158,14 @@ async def get_congress_session_info(db: AsyncSession = Depends(get_db)):
                 "in_session": senate.in_session,
                 "next_meeting": senate.meeting_date,
                 "live_link": senate.live_link,
-                "modified_at": senate.modified_at,
+                "updated_at": senate.updated_at,
             },
             {
                 "chamber": "house",
                 "in_session": house.in_session,
                 "next_meeting": house.meeting_date,
                 "live_link": house.live_link,
-                "modified_at": house.modified_at,
+                "updated_at": house.updated_at,
             },
         ]
     else:
@@ -206,7 +206,7 @@ async def get_potus_schedule(
                 "time": item.time,
                 "pubDate": item.time,
                 "press_information": item.press_information,
-                "modified_at": item.modified_at,
+                "updated_at": item.updated_at
             }
             for item in result
         ]

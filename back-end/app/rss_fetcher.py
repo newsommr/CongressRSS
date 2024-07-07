@@ -9,7 +9,7 @@ import requests
 
 from app.contact_llm import send_prompt
 from app.models import FeedItem, SessionInfo, PresidentSchedule
-from app.crud import get_db, update_meeting_info, create_rss_item, update_president_schedule
+from app.crud import get_db, update_meeting_info, add_feed_item, update_president_schedule
 
 # Constants for file paths
 SENATE_PROMPT_FILE = 'app/prompts/senate_prompt.txt'
@@ -43,7 +43,7 @@ def fetch_and_store_rss():
             for entry in entries:
                 item = parse_entry(entry, source)
                 if item is not None:
-                    create_rss_item(db, item)
+                    add_feed_item(db, item)
 
             db.commit()
         except Exception as e:
