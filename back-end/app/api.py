@@ -1,4 +1,4 @@
-from app.models import RSSItem, SenateInfo, HouseInfo, PresidentSchedule
+from app.models import FeedItem, SessionInfo, PresidentSchedule
 from app.crud import get_db
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.exceptions import RequestValidationError
@@ -34,14 +34,14 @@ async def retrieve_feed(
     data = None
     message = None
     if is_valid_bounds(limit, offset):
-        rss_query = db.query(RSSItem)
+        rss_query = db.query(FeedItem)
         president_schedule_query = db.query(PresidentSchedule)
         potus_schedule_included = True
 
         # Apply source filtering if sources are provided
         if sources:
             source_list = sources.split(",")
-            rss_query = rss_query.filter(RSSItem.source.in_(source_list))
+            rss_query = rss_query.filter(FeedItem.source.in_(source_list))
             potus_schedule_included = "potus-schedule" in source_list
 
         # Apply search term filtering if a search term is provided
@@ -51,7 +51,7 @@ async def retrieve_feed(
                 try:
                     date_obj = datetime.strptime(search_term, "%B %d, %Y")
                     rss_query = rss_query.filter(
-                        func.date(RSSItem.pubDate) == date_obj.date()
+                        func.date(FeedItem.pubDate) == date_obj.date()
                     )
                     president_schedule_query = president_schedule_query.filter(
                         func.date(PresidentSchedule.time) == date_obj.date()
@@ -60,7 +60,7 @@ async def retrieve_feed(
                     return formatted_response(status, data, DATE_DOES_NOT_EXIST)
             else:
                 # If search term is not a date, apply text search
-                rss_query = rss_query.filter(RSSItem.title.ilike(f"%{search_term}%"))
+                rss_query = rss_query.filter(FeedItem.title.ilike(f"%{search_term}%"))
                 president_schedule_query = president_schedule_query.filter(
                     or_(
                         PresidentSchedule.description.ilike(f"%{search_term}%"),
@@ -70,7 +70,7 @@ async def retrieve_feed(
 
         # Fetch RSS items and POTUS schedule items with pagination
         rss_items = (
-            rss_query.order_by(desc(RSSItem.pubDate)).offset(offset).limit(limit).all()
+            rss_query.order_by(desc(FeedItem.pubDate)).offset(offset).limit(limit).all()
         )
         rss_items = [
             {
@@ -78,7 +78,7 @@ async def retrieve_feed(
                 "link": item.link,
                 "pubDate": item.pubDate,
                 "source": item.source,
-                "fetched_at": item.fetched_at,
+                "modified_at": item.modified_at,
             }
             for item in rss_items
         ]
@@ -110,7 +110,7 @@ async def retrieve_feed(
 
 
 def get_pub_date(item):
-    if isinstance(item, RSSItem):
+    if isinstance(item, FeedItem):
         return item.pubDate
     elif isinstance(item, dict):
         return item["pubDate"]
@@ -128,7 +128,7 @@ def format_president_schedule_item(item):
     else:
         title = item.description
 
-    # Format item as RSSItem-like dictionary
+    # Format item as FeedItem-like dictionary
     formatted_item = {
         "title": title,
         "link": item.link,
@@ -147,8 +147,8 @@ async def get_congress_session_info(db: AsyncSession = Depends(get_db)):
     data = None
     message = None
 
-    senate = db.query(SenateInfo).first()
-    house = db.query(HouseInfo).first()
+    senate = db.query(SessionInfo).filter_by(chamber="senate").first()
+    house = db.query(SessionInfo).filter_by(chamber="house").first()
 
     if senate and house:
         status = "success"
@@ -156,16 +156,16 @@ async def get_congress_session_info(db: AsyncSession = Depends(get_db)):
             {
                 "chamber": "senate",
                 "in_session": senate.in_session,
-                "next_meeting": senate.next_meeting,
+                "next_meeting": senate.meeting_date,
                 "live_link": senate.live_link,
-                "last_updated": senate.last_updated,
+                "modified_at": senate.modified_at,
             },
             {
                 "chamber": "house",
                 "in_session": house.in_session,
-                "next_meeting": house.next_meeting,
+                "next_meeting": house.meeting_date,
                 "live_link": house.live_link,
-                "last_updated": house.last_updated,
+                "modified_at": house.modified_at,
             },
         ]
     else:
@@ -206,7 +206,7 @@ async def get_potus_schedule(
                 "time": item.time,
                 "pubDate": item.time,
                 "press_information": item.press_information,
-                "last_updated": item.last_updated,
+                "modified_at": item.modified_at,
             }
             for item in result
         ]

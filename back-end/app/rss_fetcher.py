@@ -8,7 +8,7 @@ import pytz
 import requests
 
 from app.contact_llm import send_prompt
-from app.models import RSSItem, HouseInfo, SenateInfo, PresidentSchedule
+from app.models import FeedItem, SessionInfo, PresidentSchedule
 from app.crud import get_db, update_meeting_info, create_rss_item, update_president_schedule
 
 # Constants for file paths
@@ -135,10 +135,10 @@ def fetch_session_info():
 
     try:
         in_session, next_meeting, live_link = get_senate_floor_info()
-        update_meeting_info(db, "housedailypress-twitter", in_session, next_meeting, live_link)
+        update_meeting_info(db, "house", in_session, next_meeting, live_link)
         
         in_session, next_meeting, live_link = get_house_floor_info(db)
-        update_meeting_info(db, "senateppg-twitter", in_session, next_meeting, live_link)
+        update_meeting_info(db, "senate", in_session, next_meeting, live_link)
         db.commit()
     except Exception as e:
         db.rollback()
@@ -151,9 +151,9 @@ def get_house_floor_info(db):
         response = requests.get("https://in-session.house.gov/")
         live_link = "https://live.house.gov"
         in_session = int(response.text)
-        items = db.query(RSSItem)\
-             .filter(RSSItem.source == HOUSE_SOURCE)\
-             .order_by(desc(RSSItem.pubDate))\
+        items = db.query(FeedItem)\
+             .filter(FeedItem.source == HOUSE_SOURCE)\
+             .order_by(desc(FeedItem.pubDate))\
              .limit(15)\
              .all()
         items_str = "\n".join([f"Title: {item.title}, Date: {item.pubDate}" for item in items])

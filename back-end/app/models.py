@@ -1,36 +1,29 @@
 from app.database import Base
 from sqlalchemy import Column, Integer, String, DateTime
 import datetime
-import pytz
 
-class RSSItem(Base):
-    __tablename__ = "rss_items"
+class TimestampMixin:
+    modified_at = Column(DateTime(timezone=True))
+
+class FeedItem(Base, TimestampMixin):
+    __tablename__ = "feed_items"
     id = Column(Integer, primary_key=True)
     title = Column(String, index=True)
-    link = Column(String, default=None)
+    link = Column(String)
     pubDate = Column(DateTime(timezone=True), index=True)
     source = Column(String)
-    fetched_at = Column(DateTime(timezone=True), default=lambda: datetime.now(pytz.utc))
-class HouseInfo(Base):
-    __tablename__ = "house_info"
+class SessionInfo(Base, TimestampMixin):
+    __tablename__ = "session_info"
     id = Column(Integer, primary_key=True)
-    next_meeting = Column(DateTime(timezone=True), default=None)
-    in_session = Column(Integer, default=0)
-    live_link = Column(String, default="")
-    last_updated = Column(DateTime(timezone=True), default=lambda: datetime.now(pytz.utc))
-class SenateInfo(Base):
-    __tablename__ = "senate_info"
-    id = Column(Integer, primary_key=True)
-    next_meeting = Column(DateTime(timezone=True), default=None)
-    in_session = Column(Integer, default=0)
-    live_link = Column(String, default="")
-    last_updated = Column(DateTime(timezone=True), default=lambda: datetime.now(pytz.utc))
-class PresidentSchedule(Base):
+    chamber = Column(String)
+    meeting_date = Column(DateTime(timezone=True))
+    in_session = Column(Integer)
+    live_link = Column(String)
+class PresidentSchedule(Base, TimestampMixin):
     __tablename__ = 'president_schedule'
     id = Column(Integer, primary_key=True)
-    link = Column(String, default=None)
-    location = Column(String, default="")
-    time = Column(DateTime(timezone=True), default=None, index=True)
-    description = Column(String, default="", index=True)
-    press_information = Column(String, default="")
-    last_updated = Column(DateTime(timezone=True), default=lambda: datetime.now(pytz.utc))
+    link = Column(String)
+    location = Column(String)
+    time = Column(DateTime(timezone=True), index=True)
+    description = Column(String, index=True)
+    press_information = Column(String)

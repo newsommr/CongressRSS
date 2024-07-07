@@ -1,10 +1,11 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 import logging
-from app.models import RSSItem, HouseInfo, SenateInfo, PresidentSchedule
+from app.models import FeedItem, SessionInfo, PresidentSchedule
 from app.database import SessionLocal
 from datetime import datetime
 import pytz
+from app.time_util import current_time
 
 # Constants
 SENATE_SOURCE = "senateppg-twitter"
@@ -17,52 +18,36 @@ def get_db():
     with SessionLocal() as db:
         yield db
 
-def create_rss_item(db: Session, rss_item: dict) -> RSSItem:
+def create_rss_item(db: Session, rss_item: dict) -> FeedItem:
     """
     Adds new rss_items to the database.
     """
     
     title, pubDate = rss_item['title'], rss_item['pubDate']
-    existing_item = db.query(RSSItem).filter_by(title=title, pubDate=pubDate).first()
+    existing_item = db.query(FeedItem).filter_by(title=title, pubDate=pubDate).first()
     if existing_item:
         return
-    new_item = RSSItem(**rss_item, fetched_at=datetime.now(pytz.utc))
+    new_item = FeedItem(**rss_item, modified_at=current_time())
     db.add(new_item)
 
 
-def update_meeting_info(db: Session, source: str, in_session: int, next_meeting = None, live_link: str = None):
+def update_meeting_info(db: Session, chamber: str, in_session: int, next_meeting = None, live_link: str = None):
     """
     Updates or adds the meeting information in the database.
     """
 
-    if source == SENATE_SOURCE:
-        senate_info = db.query(SenateInfo).first()
+    session_info = db.query(SessionInfo).filter_by(chamber=chamber).delete()
+    new_item = SessionInfo(
+        chamber = chamber,
+        meeting_date = next_meeting,
+        in_session = in_session,
+        live_link = live_link,
+        modified_at = current_time()
+    )
+    db.add(new_item)
 
-        if senate_info:
-            update_senate_info(senate_info, in_session, next_meeting, live_link)
-        else:
-            senate_info = create_senate_info(in_session, next_meeting, live_link)
-            db.add(senate_info)
 
-    elif source == HOUSE_SOURCE:
-        house_info = db.query(HouseInfo).first()
-
-        if house_info:
-            update_house_info(house_info, in_session, next_meeting, live_link)
-        else:
-            house_info = create_house_info(in_session, next_meeting, live_link)
-            db.add(house_info)
-
-def update_senate_info(senate_info, in_session: int, next_meeting, live_link):
-    """
-    Updates existing SenateInfo record.
-    """
-    senate_info.in_session = in_session
-    senate_info.next_meeting = next_meeting
-    senate_info.live_link = live_link
-    senate_info.last_updated = datetime.now(pytz.utc)
-
-def update_house_info(house_info, in_session: int, next_meeting, live_link):
+def update_session_info(session_info, in_session: int, next_meeting, live_link):
     """
     Updates existing HouseInfo record.
     """
@@ -80,23 +65,5 @@ def update_president_schedule(db: Session, president_schedule: dict) -> Presiden
     if existing_item:
         return
 
-    new_item = PresidentSchedule(**president_schedule, last_updated=datetime.now(pytz.utc))
+    new_item = PresidentSchedule(**president_schedule, modified_at=datetime.now(pytz.utc))
     db.add(new_item)
-    
-def create_senate_info(in_session: int, next_meeting, live_link) -> SenateInfo:
-    """
-    Creates a new SenateInfo record.
-    """
-    return SenateInfo(in_session=in_session, next_meeting=next_meeting, live_link=live_link, last_updated=datetime.now(pytz.utc))
-
-def create_house_info(in_session: int, next_meeting, live_link) -> HouseInfo:
-    """
-    Creates a new HouseInfo record.
-    """
-    return HouseInfo(in_session=in_session, next_meeting=next_meeting, live_link=live_link, last_updated=datetime.now(pytz.utc))
-
-def create_president_schedule(link, location: str, time, description: str, press_information: str):
-    """
-    Creates a new PresidentSchedule record.
-    """
-    return PresidentSchedule(link=link, location=location, time=time, description=description, last_updated=datetime.now(pytz.utc))
