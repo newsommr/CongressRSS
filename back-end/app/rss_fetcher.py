@@ -22,6 +22,7 @@ def fetch_and_store_rss():
     """
     Fetches RSS feed data from multiple sources and stores it in the database.
     """
+    print("running")
     db = next(get_db())
     rss_feeds = [
                     ("https://rules.house.gov/rss.xml", "house-rules-committee"), 
@@ -126,19 +127,18 @@ def fetch_president_schedule():
     finally:
         db.close()
 
-def fetch_session_info(source: str):
+def fetch_session_info():
     """
     Fetches session information from the database and sends a prompt to the LLM.
     """
     db = next(get_db())
 
     try:
-        if source == SENATE_SOURCE:
-            in_session, next_meeting, live_link = get_senate_floor_info()
-            update_meeting_info(db, source, in_session, next_meeting, live_link)
-        if source == HOUSE_SOURCE:
-            in_session, next_meeting, live_link = get_house_floor_info(db)
-            update_meeting_info(db, source, in_session, next_meeting, live_link)
+        in_session, next_meeting, live_link = get_senate_floor_info()
+        update_meeting_info(db, "housedailypress-twitter", in_session, next_meeting, live_link)
+        
+        in_session, next_meeting, live_link = get_house_floor_info(db)
+        update_meeting_info(db, "senateppg-twitter", in_session, next_meeting, live_link)
         db.commit()
     except Exception as e:
         db.rollback()
