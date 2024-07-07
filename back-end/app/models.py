@@ -1,9 +1,10 @@
 from app.database import Base
 from sqlalchemy import Column, Integer, String, DateTime
-import datetime
+from time_util import current_time
 
 class TimestampMixin:
-    modified_at = Column(DateTime(timezone=True))
+    created_at = Column(DateTime(timezone=True), default=current_time(), onupdate=current_time())
+    updated_at = Column(DateTime(timezone=True), default=current_time(), onupdate=current_time())
 
 class FeedItem(Base, TimestampMixin):
     __tablename__ = "feed_items"
