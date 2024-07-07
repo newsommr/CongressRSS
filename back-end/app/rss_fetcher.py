@@ -28,7 +28,6 @@ def fetch_and_store_rss():
     """
     Fetches RSS feed data from multiple sources and stores it in the database.
     """
-    print("running")
     db = next(get_db())
     rss_feeds = [
         ("https://rules.house.gov/rss.xml", "house-rules-committee"),
