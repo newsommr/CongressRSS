@@ -172,10 +172,10 @@ def fetch_session_info():
 
     try:
         in_session, next_meeting, live_link = get_senate_floor_info()
-        update_meeting_info(db, "house", in_session, next_meeting, live_link)
+        update_meeting_info(db, "senate", in_session, next_meeting, live_link)
 
         in_session, next_meeting, live_link = get_house_floor_info(db)
-        update_meeting_info(db, "senate", in_session, next_meeting, live_link)
+        update_meeting_info(db, "house", in_session, next_meeting, live_link)
         db.commit()
     except Exception as e:
         db.rollback()
