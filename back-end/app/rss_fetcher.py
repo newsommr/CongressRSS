@@ -170,6 +170,7 @@ def fetch_session_info():
     """
     db = next(get_db())
 
+<<<<<<< Updated upstream
     try:
         in_session, next_meeting, live_link = get_senate_floor_info()
         update_meeting_info(db, "senate", in_session, next_meeting, live_link)
@@ -184,6 +185,23 @@ def fetch_session_info():
         )
     finally:
         db.close()
+=======
+    house_info = get_house_floor_info(db)
+    if house_info is not None:
+        in_session, next_meeting, live_link = house_info
+        update_meeting_info(db, "house", in_session, next_meeting, live_link)
+    else:
+        logging.error("Failed to fetch house floor info")
+
+    senate_info = get_senate_floor_info()
+    if senate_info is not None:
+        in_session, next_meeting, live_link = senate_info
+        update_meeting_info(db, "senate", in_session, next_meeting, live_link)
+    else:
+        logging.error("Failed to fetch senate floor info")
+
+    db.commit()
+>>>>>>> Stashed changes
 
 
 def get_house_floor_info(db):
@@ -194,6 +212,7 @@ def get_house_floor_info(db):
         items = (
             db.query(FeedItem)
             .filter(FeedItem.source == HOUSE_SOURCE)
+            .filter(FeedItem.title.ilike('%adjourned%'))
             .order_by(desc(FeedItem.pubDate))
             .limit(15)
             .all()
@@ -214,13 +233,12 @@ def get_house_floor_info(db):
         hour = next_meeting_date.hour
         minute = next_meeting_date.minute
 
-        # Convert to UTC using your function
         next_meeting_date_utc = convert_to_utc(year, month, day, hour, minute)
         return in_session, next_meeting_date_utc, live_link
-    except ValueError as e:
-        logging.error(f"Couldn't parse string as an int: {response} - {e}")
     except Exception as e:
-        logging.error(f"Couldn't get House session information: {response} - {e}")
+        logging.error(f"Couldn't get House session information: {e}")
+        return None
+
 
 
 def get_senate_floor_info():
@@ -231,7 +249,7 @@ def get_senate_floor_info():
         response.raise_for_status()
     except requests.exceptions.RequestException as e:
         logging.error(f"Error retrieving the Senate floor schedule: {e}")
-        return
+        return None
 
     data = response.json()
     proceedings = data.get("floorProceedings", [])
@@ -252,10 +270,11 @@ def get_senate_floor_info():
             else:
                 in_session = 0
             live_link = item["convenedSessionStream"]
+            return in_session, convene_date_time_utc, live_link
         except Exception as e:
             logging.warning(f"Error processing item in proceedings: {item} - {e}")
 
-    return in_session, convene_date_time_utc, live_link
+    return None
 
 
 def convert_to_utc(year, month, day, hour, minute, timezone="America/New_York"):
