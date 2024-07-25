@@ -170,22 +170,6 @@ def fetch_session_info():
     """
     db = next(get_db())
 
-<<<<<<< Updated upstream
-    try:
-        in_session, next_meeting, live_link = get_senate_floor_info()
-        update_meeting_info(db, "senate", in_session, next_meeting, live_link)
-
-        in_session, next_meeting, live_link = get_house_floor_info(db)
-        update_meeting_info(db, "house", in_session, next_meeting, live_link)
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        logging.error(
-            f"An error occurred in updating the upcoming meeting information for Congress: {e}"
-        )
-    finally:
-        db.close()
-=======
     house_info = get_house_floor_info(db)
     if house_info is not None:
         in_session, next_meeting, live_link = house_info
@@ -199,9 +183,6 @@ def fetch_session_info():
         update_meeting_info(db, "senate", in_session, next_meeting, live_link)
     else:
         logging.error("Failed to fetch senate floor info")
-
-    db.commit()
->>>>>>> Stashed changes
 
 
 def get_house_floor_info(db):
