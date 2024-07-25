@@ -21,6 +21,7 @@ async function fetchSessionStatus() {
             if (jsonData.in_session === 1) {
                 const sessionStatusText = document.createElement('a');
                 sessionStatusText.textContent = 'In Session';
+                sessionStatusText.href = jsonData.live_link;
                 sessionStatusText.style.color = 'inherit';
                 sessionStatusText.style.textDecoration = 'none';
 
