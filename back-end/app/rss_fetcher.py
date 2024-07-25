@@ -116,8 +116,6 @@ def handle_twitter_urls(entry):
 
 def fetch_president_schedule():
     db = next(get_db())
-    db.query(PresidentSchedule).delete()
-    db.commit()
     try:
         response = requests.get(
             "https://media-cdn.factba.se/rss/json/calendar-full.json"
