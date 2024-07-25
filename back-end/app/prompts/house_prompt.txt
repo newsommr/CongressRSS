@@ -1,5 +1,4 @@
 Examine only the 15 most recent tweets from the House Press Gallery for the specific purpose of determining the next scheduled session date and time after {current_date}, including pro forma sessions. Your response should strictly adhere to the following format:
 
-If the information is available, respond with the date and time using the ISO 8601 format 'YYYY-MM-DDTHH:MM:SS-05:00'.
-If the information is not found, reply with 'Unknown'.
+Respond with the date and time using the ISO 8601 format 'YYYY-MM-DDTHH:MM:SS-05:00'.
 You are instructed to exclude any and all other content from your response. This includes, but is not limited to, explanations, interpretations, or any additional context about the data or your search process. Your compliance with these instructions is imperative.
