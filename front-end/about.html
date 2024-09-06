@@ -37,52 +37,20 @@
   </div>
 
   <div class="container mt-4">
-    <p>CongressRSS is a web application that fetches and displays RSS feeds related to legislative and executive activities. The application is divided into two main parts: the back-end, built in Python with the help of FastAPI, which is responsible for fetching and storing the RSS data, and the front-end, which displays the fetched data to the user.</p>
+    <p>CongressRSS is a web application that consolidates U.S. government communications across the executive, legislative, and judicial branches. The project is divided into two main parts: the back-end, built in Python, which fetches and stores communications, and the front-end, which displays the data to the user.</p>
 
-    <h2>Technologies Used</h2>
+    <h3>Technologies Used</h3>
     <ul>
-        <li>The back-end code is written in <code>Python</code>.</li>
-        <li>The front-end code is written in <code>HTML, CSS,</code> and <code>JavaScript</code>. It is then deployed to Cloudflare Pages.</li>
-        <li><code>Docker</code> is used for containerization and deployment. This allows for easy deployment to Fly.io.</li>
-        <li><code>FastAPI</code> is used for API routing.</li>
-        <li><code>Feedparser</code> is used for parsing various RSS feeds.</li>
-        <li><code>SQLAlchemy</code> is used for interacting with the SQLite database.</li>
-        <li><code>APScheduler</code> is used for scheduling the operations to keep the database updated in near real-time.</li>
-        <li>And much more! Feel free to take a look through the codebase and make suggestions if you wish :)</li>
+        <li><strong>Backend:</strong> Written in <code>Python</code> using <code>FastAPI</code> for API routing and deployed with Docker on <a href="https://fly.io">Fly.io</a>.</li>
+        <li><strong>Frontend:</strong> Built with <code>HTML</code>, <code>CSS</code>, and <code>JavaScript</code>, and deployed to Cloudflare Pages.</li>
+        <li><strong>RSS Parsing:</strong> <code>Feedparser</code> is used for handling RSS feed parsing.</li>
+        <li><strong>Database:</strong> <code>SQLAlchemy</code> is used for interacting with the SQLite database.</li>
+        <li><strong>Task Scheduling:</strong> <code>APScheduler</code> is used for scheduling database updates in near real-time.</li>
+        <li><strong>And much more!</strong> Feel free to take a look through the codebase and make suggestions if you wish :)</li>
     </ul>
 
-    <h2>Directory Structure</h2>
-    <ul>
-        <li><code>back-end</code>: This directory contains the back-end code.
-            <ul>
-                <li><code>app</code>:
-                    <ul>
-                        <li><code>api.py</code>: Contains the various API routes and the logic for responding to requests.</li>
-                        <li><code>models.py</code>: Contains the models for the database tables.</li>
-                        <li><code>database.py</code>: Initializes the database.</li>
-                        <li><code>crud.py</code>: Makes changes to the database on behalf of the rest of the application.</li>
-                        <li><code>main.py</code>: Handles starting up the FastAPI routes and scheduling update functions.</li>
-                        <li><code>rss_fetcher.py</code>: Contains the logic for making requests to the feeds and updating the database if needed.</li>
-                        <li><code>contact_llm.py</code>: Sends requests to a Mixtral-8x7B model for identifying Congressional schedules.</li>
-                    </ul>
-                </li>
-            </ul>
-        </li>
-        <li><code>static-site</code>: This directory contains the front-end code.
-            <ul>
-                <li><code>fetchRSS.js</code>: The JavaScript code for fetching and displaying the RSS data from the back-end.</li>
-                <li><code>index.html</code>: The main HTML file for the website.</li>
-                <li><code>style.css</code>: The CSS styles for the website.</li>
-                <li><code>about.html</code>: This page describes the projects and what data it can provide to users.</li>
-                <li><code>meetingInfo.js</code>: This file contains the JavaScript code for</li>
-            </ul>
-        </li>
-    </ul>
-
-    <h2>Running the Application</h2>
-
-    <h3>Back-end</h3>
-    <p>The back-end is a FastAPI application that fetches RSS data and stores it in a SQLite database. It exposes an API that the front-end can use to fetch the stored data.</p>
+    <h3>Running the Application</h3>
+    <p>The back-end is a FastAPI application that exposes an API that the front-end can use to fetch the stored data.</p>
     <ol>
         <li>Navigate to the <code>back-end</code> directory.</li>
         <li>Build the Docker image by running the command <code>docker build -t congressrss .</code>.</li>
@@ -90,27 +58,19 @@
     </ol>
     <p>The back-end will now be running at <a href="http://localhost:8080">http://localhost:8080</a>.</p>
 
-    <h3>Front-end</h3>
-    <p>The front-end is an HTML/CSS/JavaScript site that fetches data from the back-end and displays it to the user.</p>
-    <p>To run the front-end, you just need to open the <code>index.html</code> file in your web browser.</p>
-    <p>Due to CORS, the site will not work without updating the list of acceptable origins in <code>main.py</code> in the back-end.</p>
-
-    <h3>API Endpoints</h3>
+    <h2>API Endpoints</h2>
 
     <h4>Fetch All RSSItems</h4>
+    <p><strong>Example Request:</strong> <a href="https://congress-rss.fly.dev/feed?limit=3">https://congress-rss.fly.dev/feed?limit=3</a></p>
+    <p><strong>Parameters:</strong></p>
     <ul>
-        <li><strong>Endpoint:</strong> <code>GET /feed</code></li>
-        <li><strong>Description:</strong> Fetches all items in the feed</li>
-        <li><strong>Parameters:</strong>
-            <ul>
-                <li><code>limit</code>: Limit the number of items (default is 100).</li>
-                <li><code>offset</code>: Pagination offset (default is 0).</li>
-            </ul>
-        </li>
-        <li><strong>Example Request:</strong> <a href="https://congress-rss.fly.dev/feed?limit=3">https://congress-rss.fly.dev/feed?limit=3</a></li>
-        <li><strong>Example Response:</strong>
-            <pre>
-[
+        <li><code>limit</code>: Limit the number of items (default is 100).</li>
+        <li><code>offset</code>: Pagination offset (default is 0).</li>
+        <li><code>sources</code>: Filter items by specific sources (optional).</li>
+        <li><code>search_term</code>: Search for items based on the title (optional).</li>
+    </ul>
+    <p><strong>Successful Response:</strong></p>
+    <pre><code>[
   {
     "id": 52,
     "link": "https://www.whitehouse.gov/briefing-room/legislation/2023/11/13/press-release-bills-signed-h-r-366-h-r-1226/",
@@ -135,109 +95,44 @@
     "title": "H.R. 6363 - Further Continuing Appropriations and Extensions Act, 2024",
     "fetched_at": "2023-12-13T07:09:02.753200"
   }
-]
-</pre>
-        </li>
-    </ul>
-
-    <h4>Fetch All RSSItems by Source</h4>
-    <ul>
-        <li><strong>Endpoint:</strong> <code>GET /feed?sources=</code></li>
-        <li><strong>Description:</strong> Fetches all items in the feed from a specific sources.</li>
-        <li><strong>Parameters:</strong>
-            <ul>
-                <li><code>limit</code>: Limit the number of items (default is 100).</li>
-                <li><code>offset</code>: Pagination offset (default is 0).</li>
-            </ul>
-        </li>
-        <li><strong>Example Request:</strong> <a href="https://congress-rss.fly.dev/feed?sources=senateppg-twitter&limit=1">https://congress-rss.fly.dev/feed?sources=senateppg-twitter&limit=1</a></li>
-        <li><strong>Example Response:</strong>
-            <pre>
-              {
-                "status": "success",
-                "data": [
-                  {
-                    "title": "Senator Cardin (D-MD) presided today.",
-                    "link": "https://twitter.com/SenatePPG/status/1806719377380704478#m",
-                    "pubDate": "2024-06-28T16:00:41",
-                    "source": "senateppg-twitter",
-                    "fetched_at": "2024-06-28T16:08:27.688470"
-                  }
-                ],
-                "message": null
-              }
-</pre>
-        </li>
-    </ul>
-
-    <h4>Search through all RSSItems</h4>
-    <ul>
-        <li><strong>Endpoint:</strong> <code>GET /feed?search_term=</code></li>
-        <li><strong>Description:</strong> Searches all items based on the title attribute.</li>
-        <li><strong>Parameters:</strong>
-            <ul>
-                <li><code>limit</code>: Limit the number of items (default is 100).</li>
-                <li><code>offset</code>: Pagination offset (default is 0).</li>
-            </ul>
-        </li>
-        <li><strong>Example Request:</strong> <a href="https://congress-rss.fly.dev/feed?search_term=Camp%20David&limit=2">https://congress-rss.fly.dev/feed?search_term=Camp%20David&limit=2</a></li>
-        <li><strong>Example Response:</strong>
-            <pre>
-              {
-                "status": "success",
-                "data": [
-                  {
-                    "title": "The President and The First Lady arrive at Camp David (Camp David)",
-                    "link": null,
-                    "pubDate": "2024-06-30T02:10:00",
-                    "source": "potus-schedule"
-                  },
-                  {
-                    "title": "The President and The First Lady depart Hagerstown, Maryland en route to Camp David (Hagerstown Regional Airport)",
-                    "link": null,
-                    "pubDate": "2024-06-30T02:00:00",
-                    "source": "potus-schedule"
-                  }
-                ],
-                "message": null
-              }
-</pre>
-        </li>
-    </ul>
+]</code></pre>
+    <p><strong>Example No Results Response:</strong></p>
+    <p><strong>Request URL:</strong> <a href="https://congress-rss.fly.dev/feed?search_term=NATO%202025&limit=100&offset=0">https://congress-rss.fly.dev/feed?search_term=NATO%202025&limit=100&offset=0</a></p>
+    <pre><code>{
+  "status": "error",
+  "data": null,
+  "message": "Items not found"
+}</code></pre>
 
     <h4>Get Next Meeting Information</h4>
-    <ul>
-        <li><strong>Endpoint:</strong> <code>GET /legislative/session-info</code></li>
-        <li><strong>Description:</strong> Gets the next meeting information for the House and Senate</li>
-        <li><strong>Example Request:</strong> <a href="https://congress-rss.fly.dev/legislative/session-info">https://congress-rss.fly.dev/legislative/session-info</a></li>
-        <li><strong>Example Response:</strong>
-            <pre>
-              {
-                "status": "success",
-                "data": [
-                  {
-                    "chamber": "senate",
-                    "in_session": 0,
-                    "next_meeting": "2024-07-02T16:00:00",
-                    "live_link": "https://www.senate.gov/isvp/stv.html?type=live&comm=stv&filename=stv070224",
-                    "last_updated": "2024-07-01T03:45:16.391670"
-                  },
-                  {
-                    "chamber": "house",
-                    "in_session": 0,
-                    "next_meeting": "2024-07-02T15:00:00",
-                    "live_link": "https://live.house.gov",
-                    "last_updated": "2024-07-01T03:45:17.056047"
-                  }
-                ],
-                "message": null
-              }
-</pre>
-        </li>
-    </ul>
+    <p><strong>Example Request:</strong> <a href="https://congress-rss.fly.dev/legislative/session-info">https://congress-rss.fly.dev/legislative/session-info</a></p>
+    <p><strong>Example Response:</strong></p>
+    <pre><code>{
+  "status": "success",
+  "data": [
+    {
+      "chamber": "senate",
+      "in_session": 0,
+      "next_meeting": "2024-07-02T16:00:00",
+      "live_link": "https://www.senate.gov/isvp/stv.html?type=live&comm=stv&filename=stv070224",
+      "last_updated": "2024-07-01T03:45:16.391670"
+    },
+    {
+      "chamber": "house",
+      "in_session": 0,
+      "next_meeting": "2024-07-02T15:00:00",
+      "live_link": "https://live.house.gov",
+      "last_updated": "2024-07-01T03:45:17.056047"
+    }
+  ],
+  "message": null
+}</code></pre>
 
     <h2>Contributing</h2>
     <p>All contributions are welcome, especially if you have found a useful feed to pull from! Please feel free to submit a pull request.</p>
+
+    <h2>License</h2>
+    <p>This project is licensed under the MIT License. See the <code>LICENSE</code> file for more details.</p>
   </div>
   <script src="styles/bootstrap.bundle.min5.3.2.js"> </script>
   <script src="js/navbarLoader.js"></script>
