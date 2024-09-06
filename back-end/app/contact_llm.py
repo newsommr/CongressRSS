@@ -1,7 +1,6 @@
 from openai import OpenAI
 import os
 
-
 def send_prompt(prompt: str):
     openai = OpenAI(
         api_key=os.environ["DEEPINFRA_API_KEY"],

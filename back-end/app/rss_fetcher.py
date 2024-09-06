@@ -5,7 +5,6 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 import logging
 import pytz
-import requests
 
 from app.contact_llm import send_prompt
 from app.models import FeedItem, SessionInfo, PresidentSchedule
@@ -15,6 +14,7 @@ from app.crud import (
     add_feed_item,
     update_president_schedule,
 )
+from app.utils import RSS_FEEDS, fetch
 
 # Constants for file paths
 SENATE_PROMPT_FILE = "app/prompts/senate_prompt.txt"
@@ -26,45 +26,14 @@ HOUSE_SOURCE = "housedailypress-twitter"
 
 def fetch_and_store_rss():
     """
-    Fetches RSS feed data from multiple sources and stores it in the database.
+    Fetches RSS feed data and stores it in the database.
     """
     db = next(get_db())
-    rss_feeds = [
-        ("https://rules.house.gov/rss.xml", "house-rules-committee"),
-        (
-            "https://www.whitehouse.gov/briefing-room/legislation/feed/",
-            "white-house-legislation",
-        ),
-        (
-            "https://www.whitehouse.gov/briefing-room/presidential-actions/feed/rss",
-            "white-house-presidential-actions",
-        ),
-        ("https://twiiit.com/SenatePPG/rss", "senateppg-twitter"),
-        ("https://twiiit.com/HouseDailyPress/rss", "housedailypress-twitter"),
-        (
-            "https://rssproxy.migor.org/api/w2f?v=0.1&url=https%3A%2F%2Fwww.justice.gov%2Folc%2Fopinions&link=.%2Farticle%5B1%5D%2Fdiv%5B1%5D%2Fh2%5B1%5D%2Fa%5B1%5D&context=%2F%2Fdiv%5B3%5D%2Fmain%5B1%5D%2Fdiv%5B2%5D%2Fdiv%5B3%5D%2Fdiv%5B1%5D%2Farticle%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B2%5D%2Fdiv%5B2%5D%2Fdiv%5B4%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B2%5D%2Fdiv&date=.%2Farticle%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B2%5D%2Fdiv%5B1%5D%2Ftime%5B1%5D&re=none&out=atom",
-            "doj-olc-opinions",
-        ),
-        (
-            "https://rssproxy.migor.org/api/w2f?v=0.1&url=https%3A%2F%2Fwww.gao.gov%2Freports-testimonies&link=.%2Fdiv%5B1%5D%2Fspan%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fh4%5B1%5D%2Fa%5B1%5D&context=%2F%2Fdiv%5B1%5D%2Fdiv%5B3%5D%2Fdiv%5B4%5D%2Fmain%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B2%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fsection%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv&date=.%2Fdiv%5B1%5D%2Fspan%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fdiv%5B1%5D%2Fspan%5B1%5D%2Ftime%5B1%5D&re=none&out=atom",
-            "gao-reports",
-        ),
-        (
-            "https://www.dsca.mil/press-media/major-arms-sales/feed",
-            "dsca-major-arms-sales",
-        ),
-    ]
-
-    for rss_url, source in rss_feeds:
+    for rss_url, source in RSS_FEEDS:
         try:
             parsed_data = feedparser.parse(rss_url)
-            entries = [entry for entry in parsed_data.entries if is_valid_entry(entry)]
-
-            for entry in entries:
-                item = parse_entry(entry, source)
-                if item is not None:
-                    add_feed_item(db, item)
-
+            formatted_entries = format_entries(parsed_data.entries, source)
+            add_feed_item(db, formatted_entries)
             db.commit()
         except Exception as e:
             logging.error(f"An error occurred in fetching RSS data from {rss_url}: {e}")
@@ -72,56 +41,53 @@ def fetch_and_store_rss():
         finally:
             db.close()
 
-
-def is_valid_entry(entry) -> bool:
+def format_entries(parsed_data, source):
     """
-    Checks if the entry has the required attributes.
+    Formats the entries in an RSS feed.
     """
-    return all(hasattr(entry, attr) for attr in ["title", "link", "published_parsed"])
+    valid_items = [entry for entry in parsed_data if all(attr in entry for attr in ["title", "link", "published_parsed"])]
 
-
-def parse_entry(entry, source: str) -> dict:
-    """
-    Parses an entry from the RSS feed.
-    """
-    if "nitter" in entry.link:
-        entry = handle_twitter_urls(entry)
-        if not entry:
-            return None
-
-    return {
-        "title": entry.title,
-        "link": entry.link,
-        "pubDate": datetime(*entry.published_parsed[:6]),
-        "source": source,
-    }
-
+    formatted_entries = []
+    for entry in valid_items:
+        if "nitter" in entry['link']:
+            entry = handle_twitter_urls(entry)
+            if entry is None:
+                continue
+        
+        formatted_entries.append({
+            "title": entry['title'],
+            "link": entry['link'],
+            "pubDate": datetime(*entry['published_parsed'][:6]),
+            "source": source,
+        })
+    
+    return formatted_entries
 
 def handle_twitter_urls(entry):
     """
-    Handles the modification of Twitter URLs in the feed entry. Returns None for retweets.
+    Handles the addition of Twitter items.
     """
     # If the entry is a retweet (contains "RT by"), return None
-    if "RT by" in entry.title:
+    if "RT by" in entry['title']:
         return None
 
     # Remove 'R to @username: ' from the title if present
-    entry.title = re.sub(r"^R to @\w+: ", "", entry.title)
+    entry['title'] = re.sub(r"^R to @\w+: ", "", entry['title'])
 
     # Modify the link to replace 'nitter' domain with 'twitter.com'
-    entry.link = re.sub(r"https?://nitter\.[^/]+", "https://twitter.com", entry.link)
+    entry['link'] = re.sub(r"https?://nitter\.[^/]+", "https://twitter.com", entry['link'])
 
     return entry
 
 
 def fetch_president_schedule():
     db = next(get_db())
+    #db.query(PresidentSchedule).delete()
+    #db.commit()
+    response = fetch("https://media-cdn.factba.se/rss/json/calendar-full.json")
+    if not response:
+        return
     try:
-        response = requests.get(
-            "https://media-cdn.factba.se/rss/json/calendar-full.json"
-        )
-        if response.status_code != 200:
-            return
         items = response.json()
         for item in items:
             # Use the 'date' field with 12:00 AM if 'time' is missing or null
@@ -172,22 +138,30 @@ def fetch_session_info():
     if house_info is not None:
         in_session, next_meeting, live_link = house_info
         update_meeting_info(db, "house", in_session, next_meeting, live_link)
-    else:
-        logging.error("Failed to fetch house floor info")
 
     senate_info = get_senate_floor_info()
     if senate_info is not None:
         in_session, next_meeting, live_link = senate_info
         update_meeting_info(db, "senate", in_session, next_meeting, live_link)
-    else:
-        logging.error("Failed to fetch senate floor info")
+    
+    try:
+        db.commit()
+    except Exception as e:
+        logging.error(f"Couldn't update session information into the db: {e}")
+        db.rollback()
+    finally:
+        db.close()
 
 
 def get_house_floor_info(db):
+    response = fetch("https://in-session.house.gov/")
+    if not response:
+        return
+
     try:
-        response = requests.get("https://in-session.house.gov/")
         live_link = "https://live.house.gov"
         in_session = int(response.text)
+        
         items = (
             db.query(FeedItem)
             .filter(FeedItem.source == HOUSE_SOURCE)
@@ -206,54 +180,46 @@ def get_house_floor_info(db):
         next_meeting_date_str = send_prompt(prompt)
         next_meeting_date = datetime.fromisoformat(next_meeting_date_str)
 
-        year = next_meeting_date.year
-        month = next_meeting_date.month
-        day = next_meeting_date.day
-        hour = next_meeting_date.hour
-        minute = next_meeting_date.minute
-
-        next_meeting_date_utc = convert_to_utc(year, month, day, hour, minute)
+        next_meeting_date_utc = convert_to_utc(
+            next_meeting_date.year, 
+            next_meeting_date.month, 
+            next_meeting_date.day, 
+            next_meeting_date.hour, 
+            next_meeting_date.minute
+        )
+        
         return in_session, next_meeting_date_utc, live_link
-    except Exception as e:
+
+    except (ValueError, KeyError, TypeError) as e:
         logging.error(f"Couldn't get House session information: {e}")
         return None
 
 
-
 def get_senate_floor_info():
+    response = fetch("https://www.senate.gov/legislative/schedule/floor_schedule.json")
+    if not response:
+        return
+
     try:
-        response = requests.get(
-            "https://www.senate.gov/legislative/schedule/floor_schedule.json"
-        )
-        response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        logging.error(f"Error retrieving the Senate floor schedule: {e}")
-        return None
+        data = response.json()
+        proceedings = data.get("floorProceedings", [])
+        current_date_time_utc = datetime.now(timezone.utc)
 
-    data = response.json()
-    proceedings = data.get("floorProceedings", [])
-    current_date_time_utc = datetime.now(timezone.utc)
-
-    for item in proceedings:
-        try:
+        for item in proceedings:
             convene_date_time_utc = convert_to_utc(
-                int(item["conveneYear"]),
-                int(item["conveneMonth"]),
-                int(item["conveneDay"]),
-                int(item["conveneHour"]),
-                int(item["conveneMinutes"]),
-            )
+                    int(item["conveneYear"]),
+                    int(item["conveneMonth"]),
+                    int(item["conveneDay"]),
+                    int(item["conveneHour"]),
+                    int(item["conveneMinutes"]),
+                )
 
-            if current_date_time_utc >= convene_date_time_utc:
-                in_session = 1
-            else:
-                in_session = 0
+            in_session = int(current_date_time_utc >= convene_date_time_utc)
             live_link = item["convenedSessionStream"]
-            return in_session, convene_date_time_utc, live_link
-        except Exception as e:
-            logging.warning(f"Error processing item in proceedings: {item} - {e}")
 
-    return None
+            return in_session, convene_date_time_utc, live_link
+    except ValueError as e:
+        logging.error(f"Error parsing JSON for Senate's floor schedule: {e}")
 
 
 def convert_to_utc(year, month, day, hour, minute, timezone="America/New_York"):

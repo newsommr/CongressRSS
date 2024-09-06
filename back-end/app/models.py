@@ -1,14 +1,14 @@
 from app.database import Base
 from sqlalchemy import Column, Integer, String, DateTime
-from app.time_util import current_time
+from app.utils import current_time
 
 
 class TimestampMixin:
     created_at = Column(
-        DateTime(timezone=True), default=current_time(), onupdate=current_time()
+        DateTime(timezone=True)
     )
     updated_at = Column(
-        DateTime(timezone=True), default=current_time(), onupdate=current_time()
+        DateTime(timezone=True)
     )
 
 

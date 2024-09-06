@@ -15,7 +15,7 @@ app = FastAPI()
 # CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://congress.cipherkeeper.dev", "*"],
+    allow_origins=["https://congress.cipherkeeper.dev"],
     allow_credentials=False,
     allow_methods=["GET"],
     allow_headers=["Content-Type", "Accept"],
@@ -30,15 +30,13 @@ app.include_router(api_router)
 # Initialize scheduler
 scheduler = AsyncIOScheduler()
 
-# Check for new data
-fetch_and_store_rss()
-fetch_session_info()
 fetch_president_schedule()
-
+fetch_session_info()
+fetch_and_store_rss()
 
 @app.on_event("startup")
 async def schedule_fetching():
-    scheduler.add_job(fetch_and_store_rss, "interval", minutes=2)
-    scheduler.add_job(fetch_session_info, "interval", minutes=15)
-    scheduler.add_job(fetch_president_schedule, "interval", minutes=15)
+    scheduler.add_job(fetch_and_store_rss, "interval", minutes=5, misfire_grace_time=60, max_instances=3)
+    scheduler.add_job(fetch_session_info, "interval", minutes=30, misfire_grace_time=60, max_instances=3)
+    scheduler.add_job(fetch_president_schedule, "interval", minutes=30, misfire_grace_time=60, max_instances=3)
     scheduler.start()

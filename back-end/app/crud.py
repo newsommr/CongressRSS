@@ -5,28 +5,26 @@ from app.models import SessionInfo, FeedItem, PresidentSchedule
 from app.database import SessionLocal
 from datetime import datetime
 import pytz
-from app.time_util import current_time
+from app.utils import current_time
 
 # Constants
 SENATE_SOURCE = "senateppg-twitter"
 HOUSE_SOURCE = "housedailypress-twitter"
 
-
 def get_db():
     with SessionLocal() as db:
         yield db
 
-
-def add_feed_item(db: Session, feed_item: dict):
-
-    title, pubDate, link = feed_item["title"], feed_item["pubDate"], feed_item["link"]
-    existing_item = (
-        db.query(FeedItem).filter_by(title=title, pubDate=pubDate, link=link).first()
-    )
-    if existing_item:
-        return
-    new_item = FeedItem(**feed_item)
-    db.add(new_item)
+def add_feed_item(db: Session, feed_items: dict):
+    for item in feed_items:
+        title, pubDate, link = item["title"], item["pubDate"], item["link"]
+        existing_item = (
+            db.query(FeedItem).filter_by(title=title, pubDate=pubDate, link=link).first()
+        )
+        if existing_item:
+            continue
+        new_item = FeedItem(**item, created_at=current_time(), updated_at=current_time())
+        db.add(new_item)
 
 
 def update_meeting_info(
@@ -39,6 +37,8 @@ def update_meeting_info(
         meeting_date=next_meeting,
         in_session=in_session,
         live_link=live_link,
+        created_at=current_time(),
+        updated_at=current_time()
     )
     db.add(new_item)
 
@@ -57,5 +57,5 @@ def update_president_schedule(db: Session, president_schedule: dict):
     if existing_item:
         return
 
-    new_item = PresidentSchedule(**president_schedule)
+    new_item = PresidentSchedule(**president_schedule, created_at=current_time(), updated_at=current_time())
     db.add(new_item)
