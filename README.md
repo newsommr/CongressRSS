@@ -6,7 +6,7 @@ CongressRSS is a web application that consolidates U.S. government communicates 
 
 - **Backend**: Written in `Python` using `FastAPI` for API routing and deployed with Docker on [Fly.io](https://fly.io).
 - **Frontend**: Built with `HTML`, `CSS`, and `JavaScript`, and deployed to Cloudflare Pages.
-- **RSS Parsing**: `Feedparser` is used to handle RSS feed parsing.
+- **RSS Parsing**: [`Feedparser`](https://pypi.org/project/feedparser/) is used to handle RSS feed parsing.
 - **Database**: `SQLAlchemy` is used for interacting with the SQLite database.
 - **Task Scheduling**: `APScheduler` is used to schedule database updates in near real-time.
 - **And much more!** Feel free to take a look through the codebase and make suggestions if you wish :)
